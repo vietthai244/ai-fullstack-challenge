@@ -39,7 +39,7 @@ Critical path: Phases 1 → 2 → 3 → 4 → 5 are strictly sequential (each un
 **Plans**: 4 plans
 
 Plans:
-- [ ] 01-01-yarn4-workspaces-shared-scaffold-PLAN.md — Yarn 4 + .yarnrc.yml + root/shared/backend/frontend package.json skeletons + Zod schema seed (Wave 1, FOUND-01)
+- [x] 01-01-yarn4-workspaces-shared-scaffold-PLAN.md — Yarn 4 + .yarnrc.yml + root/shared/backend/frontend package.json skeletons + Zod schema seed (Wave 1, FOUND-01)
 - [ ] 01-02-root-ts-eslint-prettier-PLAN.md — tsconfig.base + per-workspace tsconfigs + ESLint flat config + Prettier + first `yarn install` (Wave 2, FOUND-04)
 - [ ] 01-03-pino-logger-module-PLAN.md — backend/src/util/logger.ts + httpLogger.ts (env-aware pino + pino-http middleware, not yet mounted) (Wave 2, FOUND-05)
 - [ ] 01-04-cross-workspace-import-proof-PLAN.md — backend + frontend index.ts import @campaign/shared; full fresh-clone acceptance gate (Wave 3, FOUND-01/04/05)
