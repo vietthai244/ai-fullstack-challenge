@@ -878,27 +878,29 @@ Both should type-check (`yarn typecheck`) and lint clean (except the frontend on
 
 All other claims in this research are tagged `[VERIFIED: ...]` or `[CITED: ...]` with the source.
 
-## Open Questions
+## Open Questions (RESOLVED)
+
+All four open questions below have been resolved by Phase 1 plan choices. Each `**RESOLVED:**` line is the decision the plans implement.
 
 1. **Should root `package.json` include `"type": "module"` (ESM everywhere)?**
    - What we know: `shared/` is ESM (`"type": "module"`). Backend in Phase 3+ will likely also be ESM (tsx supports both, and `NodeNext` requires one or the other). Frontend (Vite) handles this internally.
    - What's unclear: Whether root itself needs it (root has no runtime code — it's just scripts).
-   - Recommendation: **Do NOT** set `"type": "module"` at root. Root is not runtime — keep it neutral so `eslint.config.js` can stay CommonJS-safe if needed. If flat config lands as `.js` in a root without `"type": "module"`, it is CommonJS; with `"type": "module"` it's ESM. Since we wrote `import` statements in Pattern 7, name the file `eslint.config.mjs` to force ESM regardless of root `"type"`. **Recommended filename: `eslint.config.mjs`.**
+   - **RESOLVED:** Do NOT set `"type": "module"` at root. Root is not runtime — keep it neutral. Flat config lands as `eslint.config.mjs` (`.mjs` extension forces ESM regardless of root `"type"` field). **Plan 02 uses `eslint.config.mjs`.**
 
 2. **Does `@campaign/shared` need a `prepare` script for build-on-install in CI?**
    - What we know: Root `postinstall` runs after `yarn install`, which triggers in CI.
    - What's unclear: If a CI job does `yarn install --immutable --ignore-scripts`, postinstall is skipped — `shared/dist/` won't exist.
-   - Recommendation: Document in Phase 10 README that the Dockerfile MUST NOT pass `--ignore-scripts` to `yarn install`. No action in Phase 1.
+   - **RESOLVED:** No `prepare` script in Phase 1. Document in Phase 10 README that the Dockerfile MUST NOT pass `--ignore-scripts` to `yarn install`. Plans 01–04 do not add `prepare`; Phase 10 owns the README note.
 
 3. **Should typecheck script run against `tsc -b` (build mode) or `tsc --noEmit`?**
    - What we know: `tsc --noEmit` is simpler and works without project references. `tsc -b` requires `composite: true` in referenced projects.
    - What's unclear: Whether future phases might want incremental typecheck.
-   - Recommendation: Use `tsc --noEmit` per workspace in Phase 1 (matches "TS project references intentionally skipped" decision). Add `"typecheck": "tsc --noEmit"` to each workspace's scripts.
+   - **RESOLVED:** Use `tsc --noEmit` per workspace (matches "TS project references intentionally skipped" decision). **Plan 01 wires `"typecheck": "tsc --noEmit"` into each workspace's scripts.**
 
 4. **Where does `@campaign/shared` get zod from — its own `dependencies` or hoisted?**
    - What we know: zod is declared in `shared/package.json` as a `dependency`. Yarn 4 hoists to root `node_modules` by default under node-modules linker.
    - What's unclear: Whether backend/frontend can `import { z } from 'zod'` directly (they'll get the hoisted copy) even though they don't declare it.
-   - Recommendation: Backend/frontend should import Zod schemas via `@campaign/shared` re-exports (`export { z } from 'zod'` from `shared/src/index.ts`). This is the canonical pattern. If raw `z.object()` is needed outside shared, add a `peerDependency: { zod: "^3.23.8" }` to `shared/package.json` and declare `zod` as a regular dep in the consumer — but ONLY if the consumer actually needs raw access. For Phase 1, only `shared/` needs zod.
+   - **RESOLVED:** zod is declared ONLY in `shared/package.json` (M7 mitigation). Backend/frontend access Zod schemas via `@campaign/shared` re-exports — **never directly import `'zod'`**. Plans 01 and 04 enforce this via grep checks (`! grep -q '"zod"' backend/package.json` and equivalent for frontend). If a future phase needs raw `z.*` outside shared, revisit by adding a peerDependency on shared and declaring zod in the consumer.
 
 ## Environment Availability
 

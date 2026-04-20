@@ -36,7 +36,13 @@ Critical path: Phases 1 → 2 → 3 → 4 → 5 are strictly sequential (each un
   3. `yarn lint` and `yarn typecheck` run across all workspaces and pass on an empty scaffold
   4. Importing a Zod schema from `@campaign/shared` in both `backend/src/` and `frontend/src/` works via `workspace:*` protocol (no version-drift — `zod` declared only in `shared/package.json`)
   5. Pino + pino-http module exists in backend with request-logger and error-logger wiring (not yet mounted on a route — just the logger instance exported)
-**Plans**: TBD
+**Plans**: 4 plans
+
+Plans:
+- [ ] 01-01-yarn4-workspaces-shared-scaffold-PLAN.md — Yarn 4 + .yarnrc.yml + root/shared/backend/frontend package.json skeletons + Zod schema seed (Wave 1, FOUND-01)
+- [ ] 01-02-root-ts-eslint-prettier-PLAN.md — tsconfig.base + per-workspace tsconfigs + ESLint flat config + Prettier + first `yarn install` (Wave 2, FOUND-04)
+- [ ] 01-03-pino-logger-module-PLAN.md — backend/src/util/logger.ts + httpLogger.ts (env-aware pino + pino-http middleware, not yet mounted) (Wave 2, FOUND-05)
+- [ ] 01-04-cross-workspace-import-proof-PLAN.md — backend + frontend index.ts import @campaign/shared; full fresh-clone acceptance gate (Wave 3, FOUND-01/04/05)
 
 Context: Guards M6 (Yarn PnP breaks Vite/sequelize-cli), M7/M8/M9 (shared workspace drift, circular deps, non-topological build), and C18 (Vitest 2.1.9 / @vitejs/plugin-react 4.7.0 pins via root `resolutions`). `shared/` must ship `dist/` not raw `src/` — Vite optimizer chokes on TS from `node_modules`. Sets the shape that every downstream phase depends on.
 
@@ -194,7 +200,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6 → 7 → 8 →
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. Monorepo Foundation & Shared Schemas | 0/TBD | Not started | - |
+| 1. Monorepo Foundation & Shared Schemas | 0/4 | Not started | - |
 | 2. Schema, Migrations & Seed | 0/TBD | Not started | - |
 | 3. Authentication | 0/TBD | Not started | - |
 | 4. Campaigns & Recipients CRUD | 0/TBD | Not started | - |
