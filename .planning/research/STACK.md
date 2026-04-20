@@ -126,11 +126,14 @@ export default defineConfig({
 - Setup file imports `@testing-library/jest-dom/vitest`, calls `cleanup()` in `afterEach`.
 - jsdom 29 ships without `TextEncoder`, `structuredClone`, `ResizeObserver`, `matchMedia` — stub these in setup.
 
-### Docker Compose (infra + api scope)
-- Services: `postgres`, `redis`, `api`. Web runs via `yarn dev` (kept fast for iteration).
-- Backend startup command: `sh -c "yarn workspace @campaign/backend run db:migrate && node dist/index.js"` — idempotent, no separate init container.
-- Use `condition: service_healthy` for both postgres and redis dependencies (bare `depends_on` does not wait for service readiness).
-- Inside Docker Compose, DB host is the service name (`postgres`), not `localhost`.
+### Docker Compose (full stack — all four services)
+- Services: `postgres`, `redis`, `api`, `web`. Only `web` binds a host port (e.g., `8080:80`).
+- Backend multi-stage Dockerfile (node:20-alpine builder → node:20-alpine runtime). Startup: `sh -c "yarn workspace @campaign/backend run db:migrate && node dist/index.js"` — idempotent, no separate init container.
+- Frontend multi-stage Dockerfile (node:20-alpine builder → nginx:alpine runtime). Builder runs `yarn workspace @campaign/shared build && yarn workspace @campaign/frontend build`; runtime copies `dist/` into `/usr/share/nginx/html`.
+- nginx config: `try_files $uri /index.html` for SPA routing; `location /api/ { proxy_pass http://api:3000/; }` and `location /track/ { proxy_pass http://api:3000/track/; }` for reverse proxy (single origin → no CORS headaches).
+- Use `condition: service_healthy` for postgres + redis dependencies of api; web uses `depends_on: api` with `condition: service_started`.
+- Inside Docker Compose, hosts are service names (`postgres`, `redis`, `api`) — not `localhost`.
+- Dev iteration (optional): `yarn workspace @campaign/frontend dev` runs Vite's dev server locally with HMR, hitting the dockerized API on `http://localhost:8080/api` (Vite's `server.proxy` forwards).
 
 ## Version Conflicts & Critical Gotchas
 

@@ -55,7 +55,9 @@ If everything else slips, the API must still enforce the spec's state transition
 
 **Ops / DX**
 
-- [ ] `docker compose up` brings up Postgres, Redis, and the API container; web runs via `yarn dev`
+- [ ] `docker compose up` brings up **full stack**: Postgres, Redis, API container, and web container (nginx serving the compiled Vite build)
+- [ ] nginx in the web container reverse-proxies `/api/*` and `/track/*` to the API container — single origin for the browser, no CORS headaches, no build-time `VITE_API_URL` baked in
+- [ ] Developer iteration: README documents optional `yarn workspace @campaign/frontend dev` for HMR against the dockerized API
 - [ ] Seed data + demo login in README
 - [ ] README includes "How I Used Claude Code" section (real prompts, corrections, what was out-of-bounds, authored with live evidence captured during build)
 - [ ] Public GitHub repo + walkthrough summary
@@ -71,13 +73,12 @@ If everything else slips, the API must still enforce the spec's state transition
 - A/B testing, segmentation, unsubscribe management — not in spec, true MarTech depth is out of scope
 - Full E2E tests (Playwright) — unit/integration with Vitest+Supertest meet the "3 meaningful tests" bar with better ROI
 - Dark mode — cosmetic polish not signaled by eval criteria
-- Fully dockerized web app — infra+api is enough to meet "docker compose up" bar; dockerizing Vite dev adds friction
 - CI/CD pipeline — not an eval criterion; repo + README is the deliverable
 - Observability stack (tracing, metrics) — pino structured logs are enough at this scope
 
 ## Context
 
-**Who this is for:** Reviewer evaluating a senior full-stack candidate. They will run the repo locally (`docker compose up` + `yarn dev`), exercise the API and UI, read the code, and read the "How I Used Claude Code" section.
+**Who this is for:** Reviewer evaluating a senior full-stack candidate. They will clone the repo, run `docker compose up` once, open `http://localhost:8080`, exercise the API and UI, read the code, and read the "How I Used Claude Code" section.
 
 **What's being evaluated** (from spec, ordered by inferred weight for senior role):
 1. Backend correctness (business rules enforced server-side, efficient SQL, safe state transitions)
@@ -99,7 +100,7 @@ If everything else slips, the API must still enforce the spec's state transition
 - **Tech stack**: Node.js + Express, PostgreSQL + Sequelize, JWT, Zod, Vitest, React 18 + TS (Vite), Redux Toolkit + React Query, shadcn/ui + Tailwind, BullMQ + Redis — set by spec + decisions below
 - **Monorepo**: Flat structure — `backend/` + `frontend/` with yarn workspaces at root (matches spec wording); shared Zod schemas live in a lightweight `shared/` workspace so both sides import the same types
 - **Security**: Access token in memory, refresh token in httpOnly+SameSite cookie; bcrypt for password hashing; parameterized queries only (Sequelize handles); CORS restricted to web origin
-- **Deliverable**: Public GitHub repo + `docker compose up` for Postgres+Redis+API; web runs via `yarn dev`
+- **Deliverable**: Public GitHub repo + one-command `docker compose up` bringing up full stack (Postgres + Redis + API + nginx-served web) at `http://localhost:8080`; developer HMR optional via `yarn workspace @campaign/frontend dev`
 - **AI transparency**: Real prompts and corrections captured *as work happens* (not reconstructed), for the required README section
 
 ## Key Decisions
@@ -115,7 +116,7 @@ If everything else slips, the API must still enforce the spec's state transition
 | Zod validation with shared schemas workspace | Single source of truth for types; validates at API boundary; frontend reuses types | — Pending |
 | Flat monorepo: `backend/` + `frontend/` + `shared/` | Matches doc v2 wording; yarn workspaces still enables shared types | — Pending |
 | Vitest on both sides + Supertest + RTL | Unified runner; faster ESM; strong TS ergonomics | — Pending |
-| docker-compose scope = postgres + redis + api | One command to exercise the API; web via yarn dev keeps iteration fast | — Pending |
+| docker-compose scope = full stack (postgres + redis + api + web as nginx-served static) | True one-command setup for the reviewer; nginx proxies `/api/*` + `/track/*` → single origin (no CORS) and no build-time `VITE_API_URL`; dev-time HMR preserved via optional `yarn workspace @campaign/frontend dev` against the dockerized API | — Pending |
 | Cursor pagination on `/campaigns` | Senior flex over offset; (created_at DESC, id) cursor is simple enough to justify | — Pending |
 | Sequelize CLI migrations | Matches "PostgreSQL with Sequelize" spec; standard tooling | — Pending |
 | Log AI collaboration as we build | Authenticity for README section; reconstruction from memory is weaker | — Pending |

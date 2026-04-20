@@ -7,10 +7,11 @@
 
 ### Foundation & Infra
 
-- [ ] **FOUND-01**: Yarn-workspaces monorepo with `backend/`, `frontend/`, `shared/` (Zod schemas + TS types) workspaces
-- [ ] **FOUND-02**: `docker compose up` starts Postgres and Redis with healthchecks, then starts API container (which runs migrations before server boot)
-- [ ] **FOUND-03**: Root-level TypeScript + ESLint + Prettier config extended by each workspace
-- [ ] **FOUND-04**: Pino structured logging wired into the API (request logger + error logger)
+- [ ] **FOUND-01**: Yarn-workspaces monorepo (Yarn 4, `nodeLinker: node-modules`) with `backend/`, `frontend/`, `shared/` workspaces; `shared/` compiles to `dist/` via `tsc`; root `postinstall` builds `shared` so downstream workspaces can import its types
+- [ ] **FOUND-02**: `docker compose up` starts the **full stack** — Postgres and Redis with healthchecks, then the API container (multi-stage Dockerfile; runs `yarn sequelize db:migrate` before server boot), then the **web container** (multi-stage Dockerfile: node builder → `nginx:alpine`). API waits on `condition: service_healthy` for both db+redis; web waits on `condition: service_started` for api.
+- [ ] **FOUND-03**: nginx in the web container serves the compiled SPA with `try_files $uri /index.html` fallback and reverse-proxies `/api/*` and `/track/*` to the API container. The web container is the **only** port bound to the host (e.g., `8080:80`); reviewer opens `http://localhost:8080` and everything just works (no CORS, no `VITE_API_URL` baked in at build time).
+- [ ] **FOUND-04**: Root-level TypeScript + ESLint + Prettier config extended by each workspace
+- [ ] **FOUND-05**: Pino structured logging wired into the API (request logger + error logger)
 
 ### Data Layer
 
@@ -89,7 +90,7 @@
 
 ### Documentation
 
-- [ ] **DOC-01**: Root README — project overview, `docker compose up` + `yarn dev` setup, demo login, env vars, how to run tests
+- [ ] **DOC-01**: Root README — project overview, one-command `docker compose up` setup (full stack, opens at `http://localhost:8080`), demo login, env vars, how to run tests, optional HMR developer flow (`yarn workspace @campaign/frontend dev` against the dockerized API)
 - [ ] **DOC-02**: "How I Used Claude Code" section — 2-3 real prompts, 1-2 concrete corrections, explicit list of what Claude Code was NOT allowed to do and why — assembled from a live log kept while building
 - [ ] **DOC-03**: Brief `docs/DECISIONS.md` — 4-state machine rationale, index choices, async queue rationale, open-tracking design, JWT split rationale
 
@@ -136,7 +137,6 @@ Deferred — tracked but not in current roadmap.
 | WebSocket push | React Query polling at 2s is sufficient during `sending` |
 | Playwright E2E | Vitest+Supertest+RTL meet the "3 meaningful tests" bar with better ROI |
 | Dark mode | Cosmetic polish not signaled by eval criteria |
-| Fully dockerized web | `infra + api` meets "docker compose up"; dockerizing Vite dev adds friction |
 | CI/CD | Not an eval criterion; repo + README is the deliverable |
 | Observability stack | pino structured logs are sufficient at this scope |
 
@@ -150,6 +150,7 @@ Populated during roadmap creation.
 | FOUND-02 | — | Pending |
 | FOUND-03 | — | Pending |
 | FOUND-04 | — | Pending |
+| FOUND-05 | — | Pending |
 | DATA-01 | — | Pending |
 | DATA-02 | — | Pending |
 | DATA-03 | — | Pending |
@@ -198,10 +199,10 @@ Populated during roadmap creation.
 | DOC-03 | — | Pending |
 
 **Coverage:**
-- v1 requirements: 48 total
+- v1 requirements: 49 total
 - Mapped to phases: 0 (pending roadmap)
-- Unmapped: 48
+- Unmapped: 49
 
 ---
 *Requirements defined: 2026-04-20*
-*Last updated: 2026-04-20 after initial definition*
+*Last updated: 2026-04-20 — added FOUND-05 (pino logging) after switching to fully dockerized web*

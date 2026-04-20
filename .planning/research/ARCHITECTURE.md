@@ -327,7 +327,7 @@ campaign/
 ├── .yarnrc.yml                  # nodeLinker: node-modules
 ├── .gitignore
 ├── .env.example                 # DATABASE_URL, REDIS_URL, JWT_ACCESS_SECRET, JWT_REFRESH_SECRET
-├── docker-compose.yml           # postgres + redis + api (web runs via yarn dev)
+├── docker-compose.yml           # full stack: postgres + redis + api + web (nginx)
 ├── package.json                 # root, workspaces: ["backend", "frontend", "shared"]
 ├── yarn.lock
 ├── README.md                    # setup, demo login, "How I Used Claude Code"
@@ -365,6 +365,8 @@ campaign/
     ├── vitest.config.ts
     ├── tsconfig.json
     ├── tailwind.config.ts
+    ├── Dockerfile               # multi-stage: node builder → nginx:alpine
+    ├── nginx.conf               # SPA try_files + /api + /track reverse proxy
     ├── index.html
     └── src/
         ├── main.tsx
@@ -398,17 +400,24 @@ campaign/
 
 **TypeScript project references intentionally skipped** — workspace resolution is sufficient at three workspaces; references add ~30 min of config for negligible benefit at this scale.
 
-## 12. Docker Compose Dependency Order
+## 12. Docker Compose — Full Stack (four services)
 
 ```yaml
 services:
   postgres:
     image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: campaign
+      POSTGRES_PASSWORD: campaign
+      POSTGRES_DB: campaigns
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER"]
       interval: 5s
       timeout: 5s
       retries: 10
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+
   redis:
     image: redis:7-alpine
     healthcheck:
@@ -416,19 +425,116 @@ services:
       interval: 5s
       timeout: 5s
       retries: 10
+
   api:
-    build: ./backend
+    build:
+      context: .
+      dockerfile: backend/Dockerfile
     env_file: .env
     environment:
-      DATABASE_URL: postgres://user:pass@postgres:5432/campaigns
+      DATABASE_URL: postgres://campaign:campaign@postgres:5432/campaigns
       REDIS_URL: redis://redis:6379
     depends_on:
       postgres: { condition: service_healthy }
       redis:    { condition: service_healthy }
     command: sh -c "yarn workspace @campaign/backend run db:migrate && node dist/index.js"
+    # intentionally NO host port binding — nginx proxies to api:3000
+
+  web:
+    build:
+      context: .
+      dockerfile: frontend/Dockerfile
+    depends_on:
+      api: { condition: service_started }
+    ports:
+      - "8080:80"   # the ONLY host-exposed port — reviewer opens http://localhost:8080
+
+volumes:
+  pgdata:
 ```
 
-`condition: service_healthy` is required — Docker starts containers in parallel otherwise and migrations fail.
+**`backend/Dockerfile`** — multi-stage:
+```dockerfile
+FROM node:20-alpine AS builder
+WORKDIR /app
+COPY package.json yarn.lock .yarnrc.yml ./
+COPY .yarn .yarn
+COPY shared  shared
+COPY backend backend
+RUN corepack enable && yarn install --immutable
+RUN yarn workspace @campaign/shared build
+RUN yarn workspace @campaign/backend build
+
+FROM node:20-alpine AS runtime
+WORKDIR /app
+COPY --from=builder /app/node_modules ./node_modules
+COPY --from=builder /app/shared/dist  ./shared/dist
+COPY --from=builder /app/shared/package.json ./shared/package.json
+COPY --from=builder /app/backend/dist ./backend/dist
+COPY --from=builder /app/backend/package.json ./backend/package.json
+COPY --from=builder /app/backend/.sequelizerc ./backend/.sequelizerc
+COPY --from=builder /app/backend/src/migrations ./backend/src/migrations
+COPY package.json yarn.lock ./
+EXPOSE 3000
+CMD ["sh", "-c", "cd backend && yarn sequelize db:migrate && node dist/index.js"]
+```
+
+**`frontend/Dockerfile`** — multi-stage build → nginx static:
+```dockerfile
+FROM node:20-alpine AS builder
+WORKDIR /app
+COPY package.json yarn.lock .yarnrc.yml ./
+COPY .yarn .yarn
+COPY shared   shared
+COPY frontend frontend
+RUN corepack enable && yarn install --immutable
+RUN yarn workspace @campaign/shared build
+RUN yarn workspace @campaign/frontend build
+
+FROM nginx:alpine AS runtime
+COPY frontend/nginx.conf /etc/nginx/conf.d/default.conf
+COPY --from=builder /app/frontend/dist /usr/share/nginx/html
+EXPOSE 80
+```
+
+**`frontend/nginx.conf`** — SPA fallback + reverse proxy:
+```nginx
+server {
+  listen 80;
+  server_name _;
+  root /usr/share/nginx/html;
+  index index.html;
+
+  # SPA routing: unmatched paths fall back to index.html
+  location / {
+    try_files $uri /index.html;
+  }
+
+  # API calls from the browser proxied to the api container (single origin)
+  location /api/ {
+    proxy_pass http://api:3000/;
+    proxy_set_header Host $host;
+    proxy_set_header X-Forwarded-For $remote_addr;
+    proxy_set_header X-Forwarded-Proto $scheme;
+    proxy_http_version 1.1;
+  }
+
+  # Open-tracking pixel
+  location /track/ {
+    proxy_pass http://api:3000/track/;
+    proxy_set_header Host $host;
+  }
+}
+```
+
+**Why this shape:**
+- **One host port (8080)** — reviewer opens `http://localhost:8080`, everything works.
+- **No CORS** — browser sees a single origin; no `Access-Control-*` configuration needed.
+- **No `VITE_API_URL` baked in** — frontend fetches from relative `/api` paths, so the same build works in any environment.
+- **`condition: service_healthy`** on api's deps is required — Docker starts containers in parallel otherwise and migrations fail.
+- **web `condition: service_started`** on api is fine — the API container is up long before anyone navigates to the SPA.
+
+**Dev iteration (optional, for HMR):** `yarn workspace @campaign/frontend dev` runs Vite locally on `:5173` with `server.proxy['/api'] = 'http://localhost:8080'` — frontend HMR against the dockerized API.
 
 ## Suggested Build Order
 

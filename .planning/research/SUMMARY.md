@@ -74,7 +74,7 @@ This is a simulated email campaign management system — canonical MarTech domai
 | React Query polling during `sending` | `refetchInterval: 2000` while `sending`, `false` otherwise |
 | 4 frontend pages: login, list, detail, create | Conditional action buttons mirroring server state machine |
 | Frontend axios interceptor — memoized refresh promise | Prevents 401-storm rotation collisions |
-| Docker Compose (postgres + redis + api) + seed data | `condition: service_healthy`; seed: 1 draft + 1 scheduled + 1 sent |
+| Docker Compose — full stack (postgres + redis + api + web-as-nginx) + seed data | `condition: service_healthy` on api deps; nginx reverse-proxies `/api` + `/track`; single host port 8080; seed: 1 draft + 1 scheduled + 1 sent |
 
 **Low-cost, high-signal polish:**
 - Amber `sending` badge with spinner
@@ -93,7 +93,6 @@ This is a simulated email campaign management system — canonical MarTech domai
 | Send cancellation/retry | `failed` is terminal in simulation; document |
 | HMAC-signed tracking tokens | UUIDv4 is sufficient; rate limiting + secrets out of scope |
 | Dark mode | Not signaled by eval criteria |
-| Fully dockerized web | `infra + api` meets the bar; web via `yarn dev` keeps iteration fast |
 
 ---
 
@@ -122,7 +121,7 @@ shared/     → @campaign/shared   (Zod schemas + TS types — emits dist/)
 - Composite PK `(campaign_id, recipient_id)` covers worker update path
 - UNIQUE on `users.email` and `recipients.email`
 
-**Docker Compose:** `condition: service_healthy` on postgres + redis; api startup runs migrations before server boot; DB host inside Docker = service name `postgres`, not `localhost`. Web container intentionally omitted — `yarn dev` keeps Vite HMR fast.
+**Docker Compose (full stack):** postgres + redis + api + web (nginx:alpine serving the compiled Vite build). Only `web` binds a host port (`8080:80`) — reviewer opens `http://localhost:8080` and nginx reverse-proxies `/api/*` + `/track/*` to the api container (single origin → no CORS, no `VITE_API_URL` baked in at build time). `condition: service_healthy` on postgres + redis for api; api startup runs migrations before server boot; DB host inside Docker = service name `postgres`, not `localhost`. Dev iteration: optional `yarn workspace @campaign/frontend dev` runs Vite with HMR against the dockerized API.
 
 ---
 
