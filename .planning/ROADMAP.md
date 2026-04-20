@@ -14,7 +14,7 @@ Critical path: Phases 1 → 2 → 3 → 4 → 5 are strictly sequential (each un
 ## Phases
 
 - [ ] **Phase 1: Monorepo Foundation & Shared Schemas** - Yarn 4 flat workspaces (backend/frontend/shared), TS+ESLint+Prettier, pino logger, `@campaign/shared` Zod skeleton emitting `dist/`
-- [ ] **Phase 2: Schema, Migrations & Seed** - Sequelize models + migrations (4-state enum, FKs, indexes, `tracking_token UUID`, `pgcrypto`) + demo seed
+- [x] **Phase 2: Schema, Migrations & Seed** - Sequelize models + migrations (4-state enum, FKs, indexes, `tracking_token UUID`, `pgcrypto`) + demo seed (completed 2026-04-20)
 - [ ] **Phase 3: Authentication** - Split-token JWT auth (access in memory + refresh in httpOnly cookie), Redis denylist, `/auth/*` endpoints, `authenticate` middleware
 - [ ] **Phase 4: Campaigns & Recipients CRUD** - `/campaigns` + `/recipients` REST with cursor pagination, server-side status guards, single-SQL stats aggregate
 - [ ] **Phase 5: Async Send Queue (Schedule + Send)** - BullMQ queue+worker, atomic send guard, transaction-wrapped simulation, delayed schedule jobs with re-check on fire
@@ -201,7 +201,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6 → 7 → 8 →
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 1. Monorepo Foundation & Shared Schemas | 4/4 | Complete | 2026-04-20 |
-| 2. Schema, Migrations & Seed | 3/4 | In Progress|  |
+| 2. Schema, Migrations & Seed | 4/4 | Complete   | 2026-04-20 |
 | 3. Authentication | 0/TBD | Not started | - |
 | 4. Campaigns & Recipients CRUD | 0/TBD | Not started | - |
 | 5. Async Send Queue (Schedule + Send) | 0/TBD | Not started | - |
