@@ -8,7 +8,11 @@
     "dev": "tsx watch src/index.ts",
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "lint": "eslint src",
-    "test": "echo 'backend tests land in Phase 7' && exit 0"
+    "test": "echo 'backend tests land in Phase 7' && exit 0",
+    "db:migrate": "sequelize db:migrate",
+    "db:migrate:undo": "sequelize db:migrate:undo",
+    "db:migrate:undo:all": "sequelize db:migrate:undo:all",
+    "db:reset": "yarn db:migrate:undo:all && yarn db:migrate"
   },
   "dependencies": {
     "@campaign/shared": "workspace:*",
