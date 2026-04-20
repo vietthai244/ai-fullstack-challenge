@@ -2,10 +2,11 @@
 //
 // pino-http Express middleware (FOUND-05 — scaffold only).
 //
-// This file exports the middleware but does NOT mount it. Express lands in
-// Phase 3 when `buildApp()` is written; that's where `app.use(httpLogger)`
-// is called. Keeping the middleware as a standalone export means it can be
-// unit-tested and swapped without touching the HTTP layer.
+// This file exports the middleware but does NOT mount it on any Express
+// application. Express lands in Phase 3 when `buildApp()` is written; that
+// is where the middleware will be registered on the app instance. Keeping
+// the middleware as a standalone export means it can be unit-tested and
+// swapped without touching the HTTP layer.
 //
 // Request-ID policy:
 //   - If the inbound request carries an `X-Request-ID` header (non-empty
