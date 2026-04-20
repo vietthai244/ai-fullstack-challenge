@@ -3,15 +3,15 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: executing
-stopped_at: Phase 1 complete (4/4 plans); Plan 01-04 acceptance gate PASS — ready to plan Phase 2 (Schema, Migrations & Seed)
-last_updated: "2026-04-20T21:16:00.523Z"
-last_activity: 2026-04-20 -- Phase 2 execution started
+stopped_at: Plan 02-03 complete (DATA-02 schema half — 6 migrations, FK cascades, ENUMs, composite PK, tracking_token UUID, 5 indexes; round-trip gate PASS); next is Plan 02-04 (demo seed + DATA-03 + Phase 2 acceptance gate)
+last_updated: "2026-04-20T22:13:48Z"
+last_activity: 2026-04-20 -- Plan 02-03 (Sequelize migrations — DATA-02) complete
 progress:
   total_phases: 10
   completed_phases: 1
   total_plans: 8
-  completed_plans: 4
-  percent: 50
+  completed_plans: 6
+  percent: 60
 ---
 
 # Project State
@@ -26,30 +26,31 @@ See: .planning/PROJECT.md (updated 2026-04-20)
 ## Current Position
 
 Phase: 2 (Schema, Migrations & Seed) — EXECUTING
-Plan: 1 of 4
-Status: Executing Phase 2
-Last activity: 2026-04-20 -- Phase 2 execution started
+Plan: 4 of 4 (Plan 02-04 next — demo seed + Phase 2 acceptance gate)
+Status: Executing Phase 2 — 3/4 plans done (02-01 infra, 02-02 models, 02-03 migrations)
+Last activity: 2026-04-20 -- Plan 02-03 (Sequelize migrations — DATA-02) complete
 
-Progress: [█░░░░░░░░░] 10%
+Progress: [██████░░░░] 60%
 
 ## Performance Metrics
 
 **Velocity:**
 
-- Total plans completed: 4
-- Average duration: 4.9min
-- Total execution time: 0.33 hours
+- Total plans completed: 6
+- Average duration: 5.9min
+- Total execution time: 0.59 hours
 
 **By Phase:**
 
 | Phase | Plans | Total | Avg/Plan |
 |-------|-------|-------|----------|
 | 1     | 4     | 19.6min | 4.9min |
+| 2     | 2     | 16min   | 8min    |
 
 **Recent Trend:**
 
-- Last 5 plans: 01-01 (3.3min), 01-02 (5.3min), 01-03 (~8min), 01-04 (3.0min)
-- Trend: stable (Plan 04 fastest because no Yarn install or code gen — just 2 small file rewrites + structural verify)
+- Last 5 plans: 01-02 (5.3min), 01-03 (~8min), 01-04 (3.0min), 02-02 (~10min), 02-03 (6min)
+- Trend: stable; Plan 02-03 was fast because all 6 migration bodies were verbatim from the planner's pre-resolved code samples — execution is "transcribe + verify" with no design re-decisions.
 
 *Updated after each plan completion*
 
@@ -70,6 +71,13 @@ Recent structural decisions affecting current work:
 - Plan 01-04: Rephrased backend/src/index.ts file-header comment to avoid literal `app.listen` / `process.exit` strings — grep-based verify guards treat comment-text matches as failures (Plan 03 learned the same lesson with `app.use`); carry-forward documentation pattern: "describe forbidden behaviors in paraphrase, not verbatim"
 - Plan 01-04: `yarn why zod` pipes-to-wc-l count mismatch (got 3 vs expected 1) — all three entries resolve to same zod@npm:3.25.76 (single hoisted version); M7 intact; imprecise tripwire is acknowledged, not a real drift
 - Plan 01-04: Workspace-scoped `yarn workspace @campaign/backend lint` surfaces stale system-ESLint 8.57.0 shadow on this machine — root `yarn lint` works cleanly and is what the Phase-1 acceptance gate uses, so deferred as DX documentation follow-up for Phase 10 README
+- Plan 02-03: pgcrypto migration uses 00000000000000- numeric prefix so it always sorts first lexically — defends C3/Pitfall 1 even if a later migration accidentally gets a pre-2026 timestamp; pgcrypto down() is a no-op (extension may be shared with other tooling; CREATE EXTENSION IF NOT EXISTS is idempotent on re-up)
+- Plan 02-03: Every migration creating an ENUM column drops the auto-generated PG type via raw `DROP TYPE IF EXISTS "enum_<table>_<column>"` in down() — Sequelize's dropTable does NOT cascade to ENUM types; round-trip migrate would fail with "type already exists" without this. Verified by 4-command round-trip gate.
+- Plan 02-03: tracking_token uses `Sequelize.literal('gen_random_uuid()')` — NOT `DataTypes.UUIDV4` — so the DB-side default fires for ANY INSERT path (seeder bulkInsert, raw psql, future admin tool) including those that bypass Sequelize. Research Assumption A4 verified: `\d campaign_recipients` shows unquoted `DEFAULT gen_random_uuid()` (not `'gen_random_uuid()'::text`).
+- Plan 02-03: 2 explicit composite indexes only — `idx_campaigns_created_by_created_at_id` (cursor pagination) and `idx_campaign_recipients_campaign_id_status` (stats aggregation). NO duplicate indexes for inline `unique: true` columns (users.email, recipients.email, campaign_recipients.tracking_token) or composite PK; Postgres auto-creates btree unique indexes for UNIQUE constraints (Pitfall 9).
+- Plan 02-03: Comment text containing literal `primaryKey: true` in 20260101000004-create-campaign-recipients.cjs tripped the strict grep count `=2` verify; rephrased the comment to describe behavior in paraphrase. Carry-forward of Plan 01-04's "describe forbidden behaviors in paraphrase, not verbatim" pattern — applies to BOTH grep-forbid and grep-count tripwires.
+- Plan 02-03: zsh GVM_ROOT init breaks subshells — sequelize CLI must be invoked via `/bin/bash --noprofile --norc -c "..."` with absolute path to hoisted `node_modules/.bin/sequelize` for direct calls; `yarn workspace @campaign/backend db:*` works fine via the corepack yarn 4 shim at /usr/local/bin/yarn.
+- Plan 02-03: backend/.env created from .env.example (gitignored — safe). Homebrew postgres 14 on host shadows the docker-compose postgres on localhost:5432; created `campaign` role + `campaigns` DB in homebrew postgres so DATABASE_URL works for local dev — docker container is preserved for Phase 10's `docker compose up` acceptance gate (clean volume).
 
 ### Pending Todos
 
@@ -89,5 +97,5 @@ None yet.
 ## Session Continuity
 
 Last session: 2026-04-20
-Stopped at: Phase 1 complete (4/4 plans); Plan 01-04 acceptance gate PASS — ready to plan Phase 2 (Schema, Migrations & Seed)
-Resume file: (next step — run /gsd-plan-phase 2 to plan DATA-01 / DATA-02 / DATA-03)
+Stopped at: Plan 02-03 complete (DATA-02 schema half — 6 migrations, FK cascades, ENUMs, composite PK, tracking_token UUID, 5 indexes; round-trip gate PASS); next is Plan 02-04 (demo seed + DATA-03 + Phase 2 acceptance gate)
+Resume file: .planning/phases/02-schema-migrations-seed/02-04-demo-seed-PLAN.md (or /gsd-execute-phase 2 to continue Phase 2 wave)

@@ -15,8 +15,8 @@
 
 ### Data Layer
 
-- [ ] **DATA-01**: Sequelize models for `User`, `Campaign`, `Recipient`, `CampaignRecipient` with campaign status ENUM `draft | scheduled | sending | sent` and recipient status ENUM `pending | sent | failed`
-- [ ] **DATA-02**: Sequelize migrations create all tables, FK cascades, and indexes:
+- [x] **DATA-01**: Sequelize models for `User`, `Campaign`, `Recipient`, `CampaignRecipient` with campaign status ENUM `draft | scheduled | sending | sent` and recipient status ENUM `pending | sent | failed`
+- [x] **DATA-02**: Sequelize migrations create all tables, FK cascades, and indexes:
   - `CREATE EXTENSION IF NOT EXISTS pgcrypto;` (first migration — needed for `gen_random_uuid()`)
   - `campaign_recipients.tracking_token UUID UNIQUE NOT NULL DEFAULT gen_random_uuid()` — public-facing token for the open-tracking pixel URL (defeats enumeration since the natural composite PK is BIGINT)
   - `(created_by, created_at DESC, id DESC)` on campaigns — covers cursor pagination + ownership filter in a single B-tree scan
@@ -149,8 +149,8 @@ Deferred — tracked but not in current roadmap.
 | FOUND-03 | Phase 10 | Pending |
 | FOUND-04 | Phase 1 | Complete (Plan 01-02 / verified Plan 01-04) |
 | FOUND-05 | Phase 1 | Complete (Plan 01-03 / verified Plan 01-04) |
-| DATA-01 | Phase 2 | Pending |
-| DATA-02 | Phase 2 | Pending |
+| DATA-01 | Phase 2 | Complete (Plan 02-02) |
+| DATA-02 | Phase 2 | Complete (Plan 02-03) |
 | DATA-03 | Phase 2 | Pending |
 | AUTH-01 | Phase 3 | Pending |
 | AUTH-02 | Phase 3 | Pending |
