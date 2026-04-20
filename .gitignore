@@ -1,1 +1,26 @@
 .idea
+
+# dependencies
+node_modules/
+.yarn/cache
+.yarn/install-state.gz
+.yarn/build-state.yml
+.pnp.*
+
+# build output
+dist/
+build/
+*.tsbuildinfo
+
+# env / secrets
+.env
+.env.local
+.env.*.local
+
+# editor / OS
+.DS_Store
+.vscode/
+!.vscode/settings.json.example
+
+# testing
+coverage/
