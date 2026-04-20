@@ -15,7 +15,15 @@
 ### Data Layer
 
 - [ ] **DATA-01**: Sequelize models for `User`, `Campaign`, `Recipient`, `CampaignRecipient` with campaign status ENUM `draft | scheduled | sending | sent` and recipient status ENUM `pending | sent | failed`
-- [ ] **DATA-02**: Sequelize migrations create all tables, FK cascades, and indexes: `(created_by, status, created_at DESC)` on campaigns, `(campaign_id, status)` on campaign_recipients, composite PK `(campaign_id, recipient_id)`, unique index on `users.email` and `recipients.email`
+- [ ] **DATA-02**: Sequelize migrations create all tables, FK cascades, and indexes:
+  - `CREATE EXTENSION IF NOT EXISTS pgcrypto;` (first migration — needed for `gen_random_uuid()`)
+  - `campaign_recipients.tracking_token UUID UNIQUE NOT NULL DEFAULT gen_random_uuid()` — public-facing token for the open-tracking pixel URL (defeats enumeration since the natural composite PK is BIGINT)
+  - `(created_by, created_at DESC, id DESC)` on campaigns — covers cursor pagination + ownership filter in a single B-tree scan
+  - `(campaign_id, status)` on campaign_recipients — covers stats aggregation
+  - `tracking_token` UNIQUE on campaign_recipients — covers pixel lookup
+  - Composite PK `(campaign_id, recipient_id)` on campaign_recipients — covers worker update path
+  - UNIQUE index on `users.email` and `recipients.email`
+  - FK cascade: `campaign_id` `ON DELETE CASCADE` so deleting a draft campaign cleans up its recipient links
 - [ ] **DATA-03**: Seed script creates one demo user, ten recipients, one draft + one scheduled + one sent campaign for walkthrough
 
 ### Authentication
@@ -53,7 +61,7 @@
 
 ### Open Tracking
 
-- [ ] **TRACK-01**: `GET /track/open/:campaignRecipientId` returns a 1×1 transparent GIF and sets `opened_at = NOW()` on that row only if it is still null (idempotent)
+- [ ] **TRACK-01**: `GET /track/open/:trackingToken` (public, no auth) returns the canonical 43-byte transparent GIF89a and runs `UPDATE campaign_recipients SET opened_at = NOW() WHERE tracking_token = $1 AND opened_at IS NULL` (idempotent — first open wins, subsequent matches zero rows). **Always returns 200 + GIF** even if the token doesn't match any row (oracle-attack defense). Headers: `Content-Type: image/gif`, `Cache-Control: no-store, no-cache`, `Referrer-Policy: no-referrer`. Pixel buffer is module-scoped, not read per-request.
 
 ### Frontend
 
