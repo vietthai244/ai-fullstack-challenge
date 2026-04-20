@@ -201,7 +201,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6 → 7 → 8 →
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 1. Monorepo Foundation & Shared Schemas | 4/4 | Complete | 2026-04-20 |
-| 2. Schema, Migrations & Seed | 0/TBD | Not started | - |
+| 2. Schema, Migrations & Seed | 1/4 | In Progress|  |
 | 3. Authentication | 0/TBD | Not started | - |
 | 4. Campaigns & Recipients CRUD | 0/TBD | Not started | - |
 | 5. Async Send Queue (Schedule + Send) | 0/TBD | Not started | - |
