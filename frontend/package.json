@@ -1,0 +1,19 @@
+{
+  "name": "@campaign/frontend",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "echo 'frontend build deferred to Phase 8' && exit 0",
+    "dev": "echo 'frontend dev deferred to Phase 8' && exit 0",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "lint": "eslint src",
+    "test": "echo 'frontend tests land in Phase 9' && exit 0"
+  },
+  "dependencies": {
+    "@campaign/shared": "workspace:*"
+  },
+  "devDependencies": {
+    "typescript": "^5.8.3"
+  }
+}
