@@ -142,67 +142,77 @@ Deferred — tracked but not in current roadmap.
 
 ## Traceability
 
-Populated during roadmap creation.
-
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| FOUND-01 | — | Pending |
-| FOUND-02 | — | Pending |
-| FOUND-03 | — | Pending |
-| FOUND-04 | — | Pending |
-| FOUND-05 | — | Pending |
-| DATA-01 | — | Pending |
-| DATA-02 | — | Pending |
-| DATA-03 | — | Pending |
-| AUTH-01 | — | Pending |
-| AUTH-02 | — | Pending |
-| AUTH-03 | — | Pending |
-| AUTH-04 | — | Pending |
-| AUTH-05 | — | Pending |
-| AUTH-06 | — | Pending |
-| AUTH-07 | — | Pending |
-| CAMP-01 | — | Pending |
-| CAMP-02 | — | Pending |
-| CAMP-03 | — | Pending |
-| CAMP-04 | — | Pending |
-| CAMP-05 | — | Pending |
-| CAMP-06 | — | Pending |
-| CAMP-07 | — | Pending |
-| CAMP-08 | — | Pending |
-| RECIP-01 | — | Pending |
-| RECIP-02 | — | Pending |
-| QUEUE-01 | — | Pending |
-| QUEUE-02 | — | Pending |
-| QUEUE-03 | — | Pending |
-| QUEUE-04 | — | Pending |
-| TRACK-01 | — | Pending |
-| UI-01 | — | Pending |
-| UI-02 | — | Pending |
-| UI-03 | — | Pending |
-| UI-04 | — | Pending |
-| UI-05 | — | Pending |
-| UI-06 | — | Pending |
-| UI-07 | — | Pending |
-| UI-08 | — | Pending |
-| UI-09 | — | Pending |
-| UI-10 | — | Pending |
-| UI-11 | — | Pending |
-| UI-12 | — | Pending |
-| UI-13 | — | Pending |
-| TEST-01 | — | Pending |
-| TEST-02 | — | Pending |
-| TEST-03 | — | Pending |
-| TEST-04 | — | Pending |
-| TEST-05 | — | Pending |
-| DOC-01 | — | Pending |
-| DOC-02 | — | Pending |
-| DOC-03 | — | Pending |
+| FOUND-01 | Phase 1 | Pending |
+| FOUND-02 | Phase 10 | Pending |
+| FOUND-03 | Phase 10 | Pending |
+| FOUND-04 | Phase 1 | Pending |
+| FOUND-05 | Phase 1 | Pending |
+| DATA-01 | Phase 2 | Pending |
+| DATA-02 | Phase 2 | Pending |
+| DATA-03 | Phase 2 | Pending |
+| AUTH-01 | Phase 3 | Pending |
+| AUTH-02 | Phase 3 | Pending |
+| AUTH-03 | Phase 3 | Pending |
+| AUTH-04 | Phase 3 | Pending |
+| AUTH-05 | Phase 3 | Pending |
+| AUTH-06 | Phase 3 | Pending |
+| AUTH-07 | Phase 3 | Pending |
+| CAMP-01 | Phase 4 | Pending |
+| CAMP-02 | Phase 4 | Pending |
+| CAMP-03 | Phase 4 | Pending |
+| CAMP-04 | Phase 4 | Pending |
+| CAMP-05 | Phase 4 | Pending |
+| CAMP-06 | Phase 5 | Pending |
+| CAMP-07 | Phase 5 | Pending |
+| CAMP-08 | Phase 4 | Pending |
+| RECIP-01 | Phase 4 | Pending |
+| RECIP-02 | Phase 4 | Pending |
+| QUEUE-01 | Phase 5 | Pending |
+| QUEUE-02 | Phase 5 | Pending |
+| QUEUE-03 | Phase 5 | Pending |
+| QUEUE-04 | Phase 5 | Pending |
+| TRACK-01 | Phase 6 | Pending |
+| UI-01 | Phase 8 | Pending |
+| UI-02 | Phase 9 | Pending |
+| UI-03 | Phase 8 | Pending |
+| UI-04 | Phase 8 | Pending |
+| UI-05 | Phase 8 | Pending |
+| UI-06 | Phase 9 | Pending |
+| UI-07 | Phase 9 | Pending |
+| UI-08 | Phase 9 | Pending |
+| UI-09 | Phase 9 | Pending |
+| UI-10 | Phase 9 | Pending |
+| UI-11 | Phase 9 | Pending |
+| UI-12 | Phase 9 | Pending |
+| UI-13 | Phase 9 | Pending |
+| TEST-01 | Phase 7 | Pending |
+| TEST-02 | Phase 7 | Pending |
+| TEST-03 | Phase 7 | Pending |
+| TEST-04 | Phase 7 | Pending |
+| TEST-05 | Phase 9 | Pending |
+| DOC-01 | Phase 10 | Pending |
+| DOC-02 | Phase 10 | Pending |
+| DOC-03 | Phase 10 | Pending |
 
 **Coverage:**
-- v1 requirements: 49 total
-- Mapped to phases: 0 (pending roadmap)
-- Unmapped: 49
+- v1 requirements: 51 total
+- Mapped to phases: 51 (100%)
+- Unmapped: 0
+
+**Per-phase distribution:**
+- Phase 1 (Monorepo Foundation): 3 (FOUND-01, FOUND-04, FOUND-05)
+- Phase 2 (Schema/Migrations/Seed): 3 (DATA-01, DATA-02, DATA-03)
+- Phase 3 (Auth): 7 (AUTH-01..07)
+- Phase 4 (CRUD + Stats): 8 (CAMP-01..05, CAMP-08, RECIP-01, RECIP-02)
+- Phase 5 (Queue + Schedule + Send): 6 (CAMP-06, CAMP-07, QUEUE-01..04)
+- Phase 6 (Tracking Pixel): 1 (TRACK-01)
+- Phase 7 (Backend Tests): 4 (TEST-01..04)
+- Phase 8 (Frontend Foundation): 4 (UI-01, UI-03, UI-04, UI-05)
+- Phase 9 (Frontend Pages + Badge Test): 10 (UI-02, UI-06..13, TEST-05)
+- Phase 10 (Full Docker + Docs): 5 (FOUND-02, FOUND-03, DOC-01, DOC-02, DOC-03)
 
 ---
 *Requirements defined: 2026-04-20*
-*Last updated: 2026-04-20 — added FOUND-05 (pino logging) after switching to fully dockerized web*
+*Last updated: 2026-04-20 — traceability populated; all 51 v1 requirements mapped across 10 phases*
