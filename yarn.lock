@@ -207,6 +207,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@campaign/shared@workspace:shared"
   dependencies:
+    typescript: "npm:^5.8.3"
     zod: "npm:^3.23.8"
   languageName: unknown
   linkType: soft
