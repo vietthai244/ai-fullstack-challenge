@@ -10,7 +10,7 @@
 - [ ] **FOUND-01**: Yarn-workspaces monorepo (Yarn 4, `nodeLinker: node-modules`) with `backend/`, `frontend/`, `shared/` workspaces; `shared/` compiles to `dist/` via `tsc`; root `postinstall` builds `shared` so downstream workspaces can import its types
 - [ ] **FOUND-02**: `docker compose up` starts the **full stack** — Postgres and Redis with healthchecks, then the API container (multi-stage Dockerfile; runs `yarn sequelize db:migrate` before server boot), then the **web container** (multi-stage Dockerfile: node builder → `nginx:alpine`). API waits on `condition: service_healthy` for both db+redis; web waits on `condition: service_started` for api.
 - [ ] **FOUND-03**: nginx in the web container serves the compiled SPA with `try_files $uri /index.html` fallback and reverse-proxies `/api/*` and `/track/*` to the API container. The web container is the **only** port bound to the host (e.g., `8080:80`); reviewer opens `http://localhost:8080` and everything just works (no CORS, no `VITE_API_URL` baked in at build time).
-- [ ] **FOUND-04**: Root-level TypeScript + ESLint + Prettier config extended by each workspace
+- [x] **FOUND-04**: Root-level TypeScript + ESLint + Prettier config extended by each workspace
 - [ ] **FOUND-05**: Pino structured logging wired into the API (request logger + error logger)
 
 ### Data Layer
@@ -147,7 +147,7 @@ Deferred — tracked but not in current roadmap.
 | FOUND-01 | Phase 1 | Pending |
 | FOUND-02 | Phase 10 | Pending |
 | FOUND-03 | Phase 10 | Pending |
-| FOUND-04 | Phase 1 | Pending |
+| FOUND-04 | Phase 1 | Complete (Plan 01-02) |
 | FOUND-05 | Phase 1 | Pending |
 | DATA-01 | Phase 2 | Pending |
 | DATA-02 | Phase 2 | Pending |
