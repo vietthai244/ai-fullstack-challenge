@@ -15,6 +15,12 @@ export default [
       '**/coverage/**',
       '**/*.config.js',
       '**/*.config.ts',
+      // Sequelize CLI loads these as CJS (require()) — they live outside
+      // the TypeScript compile graph (tsconfig excludes them too) and are
+      // not meant to be linted as ES modules.
+      '**/*.cjs',
+      'backend/src/migrations/**',
+      'backend/src/seeders/**',
     ],
   },
 
