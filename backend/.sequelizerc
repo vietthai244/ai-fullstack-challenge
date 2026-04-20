@@ -1,0 +1,10 @@
+// backend/.sequelizerc
+// CJS module — sequelize-cli loads this with require()
+const path = require('node:path');
+
+module.exports = {
+  config:          path.resolve(__dirname, 'src', 'db', 'config.cjs'),
+  'models-path':   path.resolve(__dirname, 'src', 'models'),
+  'migrations-path': path.resolve(__dirname, 'src', 'migrations'),
+  'seeders-path':  path.resolve(__dirname, 'src', 'seeders'),
+};
