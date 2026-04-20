@@ -42,12 +42,19 @@ const baseOptions: LoggerOptions = {
 // Pretty print only in dev (never in prod, never in test).
 // Gating the transport literal means pino does not spawn the pino-pretty
 // worker thread at all when we are not in dev — Pitfall 9 mitigation.
-const transport =
+//
+// Note: we conditionally SPREAD the transport key rather than writing
+// `{ transport: undefined }` because tsconfig.base.json sets
+// `exactOptionalPropertyTypes: true` — `transport: undefined` is then
+// distinct from "transport absent" and triggers a type error.
+const transportOption =
   !isProd && !isTest
     ? {
-        target: 'pino-pretty',
-        options: { colorize: true, translateTime: 'HH:MM:ss.l', ignore: 'pid,hostname' },
+        transport: {
+          target: 'pino-pretty',
+          options: { colorize: true, translateTime: 'HH:MM:ss.l', ignore: 'pid,hostname' },
+        },
       }
-    : undefined;
+    : {};
 
-export const logger = pino({ ...baseOptions, transport });
+export const logger = pino({ ...baseOptions, ...transportOption });
