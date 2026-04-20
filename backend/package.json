@@ -12,7 +12,9 @@
     "db:migrate": "sequelize db:migrate",
     "db:migrate:undo": "sequelize db:migrate:undo",
     "db:migrate:undo:all": "sequelize db:migrate:undo:all",
-    "db:reset": "yarn db:migrate:undo:all && yarn db:migrate"
+    "db:seed": "sequelize db:seed:all",
+    "db:seed:undo": "sequelize db:seed:undo:all",
+    "db:reset": "yarn db:migrate:undo:all && yarn db:migrate && yarn db:seed"
   },
   "dependencies": {
     "@campaign/shared": "workspace:*",
