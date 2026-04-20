@@ -3,15 +3,15 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: executing
-stopped_at: Plan 01-03 complete; ready for Plan 01-04 (cross-workspace import proof + acceptance gate)
-last_updated: "2026-04-21T00:00:00Z"
-last_activity: 2026-04-21 -- Plan 01-03 (pino logger module) completed
+stopped_at: Phase 1 complete (4/4 plans); Plan 01-04 acceptance gate PASS — ready for Phase 2 (Schema, Migrations & Seed — DATA-01/02/03)
+last_updated: "2026-04-20T20:07:38Z"
+last_activity: 2026-04-20 -- Plan 01-04 (cross-workspace import proof + Phase 1 acceptance gate) completed — Phase 1 closes
 progress:
   total_phases: 10
-  completed_phases: 0
+  completed_phases: 1
   total_plans: 4
-  completed_plans: 3
-  percent: 7
+  completed_plans: 4
+  percent: 10
 ---
 
 # Project State
@@ -25,31 +25,31 @@ See: .planning/PROJECT.md (updated 2026-04-20)
 
 ## Current Position
 
-Phase: 1 (Monorepo Foundation & Shared Schemas) — EXECUTING
-Plan: 4 of 4 (next: 01-04 cross-workspace import proof + acceptance gate)
-Status: Executing Phase 1
-Last activity: 2026-04-21 -- Plan 01-03 (pino logger module) completed
+Phase: 1 (Monorepo Foundation & Shared Schemas) — COMPLETE
+Plan: 4 of 4 complete (Phase 1 closes); next: Phase 2 (DATA-01 Sequelize models, DATA-02 migrations, DATA-03 seed)
+Status: Phase 1 complete — ready to plan Phase 2
+Last activity: 2026-04-20 -- Plan 01-04 (cross-workspace import proof + Phase 1 acceptance gate) completed
 
-Progress: [█░░░░░░░░░] 7%
+Progress: [█░░░░░░░░░] 10%
 
 ## Performance Metrics
 
 **Velocity:**
 
-- Total plans completed: 2
-- Average duration: 4.3min
-- Total execution time: 0.14 hours
+- Total plans completed: 4
+- Average duration: 4.9min
+- Total execution time: 0.33 hours
 
 **By Phase:**
 
 | Phase | Plans | Total | Avg/Plan |
 |-------|-------|-------|----------|
-| 1     | 2     | 8.6min | 4.3min |
+| 1     | 4     | 19.6min | 4.9min |
 
 **Recent Trend:**
 
-- Last 5 plans: 01-01 (3.3min), 01-02 (5.3min)
-- Trend: stable
+- Last 5 plans: 01-01 (3.3min), 01-02 (5.3min), 01-03 (~8min), 01-04 (3.0min)
+- Trend: stable (Plan 04 fastest because no Yarn install or code gen — just 2 small file rewrites + structural verify)
 
 *Updated after each plan completion*
 
@@ -67,6 +67,9 @@ Recent structural decisions affecting current work:
 - Plan 01-02: Used corepack-shim `/usr/local/bin/yarn` (4.14.1) via absolute path because homebrew's `/opt/homebrew/bin/yarn` (1.22.19 classic) shadows by default — README in Phase 10 should document `corepack enable` requirement
 - Plan 01-02: Added `typescript ^5.8.3` to `shared/package.json` devDependencies (Rule 2) — without it, `yarn workspace @campaign/shared typecheck` errors with `command not found: tsc` because Yarn 4 workspace-scripts don't see root's hoisted .bin
 - Plan 01-02: Added `.planning` + `.docs` to `.prettierignore` (Rule 3) — protects GSD planning state and reviewer's spec per CLAUDE.md guardrail + threat T-02-04
+- Plan 01-04: Rephrased backend/src/index.ts file-header comment to avoid literal `app.listen` / `process.exit` strings — grep-based verify guards treat comment-text matches as failures (Plan 03 learned the same lesson with `app.use`); carry-forward documentation pattern: "describe forbidden behaviors in paraphrase, not verbatim"
+- Plan 01-04: `yarn why zod` pipes-to-wc-l count mismatch (got 3 vs expected 1) — all three entries resolve to same zod@npm:3.25.76 (single hoisted version); M7 intact; imprecise tripwire is acknowledged, not a real drift
+- Plan 01-04: Workspace-scoped `yarn workspace @campaign/backend lint` surfaces stale system-ESLint 8.57.0 shadow on this machine — root `yarn lint` works cleanly and is what the Phase-1 acceptance gate uses, so deferred as DX documentation follow-up for Phase 10 README
 
 ### Pending Todos
 
@@ -80,10 +83,11 @@ None yet.
 
 | Category | Item | Status | Deferred At |
 |----------|------|--------|-------------|
-| *(none)* | | | |
+| DX / Docs | Document `corepack enable` + PATH-shadow workaround for developers with homebrew-installed classic yarn 1.x | Open — target Phase 10 README | Plan 01-02 |
+| DX / Tooling | Add `eslint` to `backend/package.json` + `frontend/package.json` devDependencies so `yarn workspace <name> lint` works without hitting system-ESLint PATH shadow; root `yarn lint` already works | Open — target Phase 10 quality pass (optional; not blocking any gate) | Plan 01-04 |
 
 ## Session Continuity
 
-Last session: 2026-04-21
-Stopped at: Plan 01-03 complete; ready for Plan 01-04 (cross-workspace import proof + acceptance gate)
-Resume file: .planning/phases/01-monorepo-foundation-shared-schemas/01-04-cross-workspace-import-proof-PLAN.md
+Last session: 2026-04-20
+Stopped at: Phase 1 complete (4/4 plans); Plan 01-04 acceptance gate PASS — ready to plan Phase 2 (Schema, Migrations & Seed)
+Resume file: (next step — run /gsd-plan-phase 2 to plan DATA-01 / DATA-02 / DATA-03)
