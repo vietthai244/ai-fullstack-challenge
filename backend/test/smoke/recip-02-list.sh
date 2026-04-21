@@ -19,7 +19,7 @@ code=$(curl -sS -o /tmp/smoke-recip02-seed.json -w '%{http_code}' \
   -H "Authorization: Bearer $ACCESS_TOKEN" \
   -H 'Content-Type: application/json' \
   -d "{\"email\":\"recip-cursor-seed-$(date +%s)@example.com\",\"name\":\"Cursor Seed\"}")
-test "$code" = "200" || { echo "FAIL recip-02 seed: got $code"; cat /tmp/smoke-recip02-seed.json; exit 1; }
+test "$code" = "201" || { echo "FAIL recip-02 seed: got $code"; cat /tmp/smoke-recip02-seed.json; exit 1; }
 
 # 1. GET /recipients → 200
 code=$(curl -sS -o /tmp/smoke-recip02.json -w '%{http_code}' \

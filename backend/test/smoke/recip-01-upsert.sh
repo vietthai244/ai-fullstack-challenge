@@ -22,7 +22,7 @@ code=$(curl -sS -o /tmp/smoke-recip01-first.json -w '%{http_code}' \
   -H "Authorization: Bearer $ACCESS_TOKEN" \
   -H 'Content-Type: application/json' \
   -d "{\"email\":\"$RECIP_EMAIL\",\"name\":\"First Name\"}")
-test "$code" = "200" || { echo "FAIL recip-01 first call: got $code"; cat /tmp/smoke-recip01-first.json; exit 1; }
+test "$code" = "201" || { echo "FAIL recip-01 first call: got $code"; cat /tmp/smoke-recip01-first.json; exit 1; }
 jq -e ".data.email == \"$RECIP_EMAIL\"" /tmp/smoke-recip01-first.json >/dev/null
 jq -e '.data.name == "First Name"' /tmp/smoke-recip01-first.json >/dev/null
 RECIP_ID=$(jq -r '.data.id' /tmp/smoke-recip01-first.json)

@@ -19,7 +19,7 @@ recipientsRouter.post(
   async (req: Request, res: Response, next: NextFunction) => {
     try {
       const recipient = await recipientService.upsertRecipient(req.user!.id, req.body);
-      res.json({ data: recipient });
+      res.status(201).json({ data: recipient });
     } catch (err) {
       next(err);
     }
