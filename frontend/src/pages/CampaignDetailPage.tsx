@@ -6,16 +6,12 @@
 // 1. refetchInterval v5 signature: (query) => query.state.data?.status — NOT (data) =>
 // 2. datetime-local → ISO: new Date(localString).toISOString() before POST /schedule
 // 3. stats.send_rate/open_rate are decimal (0.0–1.0) — multiply by 100 for Progress value
-// 4. Logout: dispatch(clearAuth()) BEFORE navigate('/login') — order is mandatory
-// 5. campaign.body rendered as plain text only — never dangerouslySetInnerHTML (XSS guard T-09-05-01)
+// 4. campaign.body rendered as plain text only — never dangerouslySetInnerHTML (XSS guard T-09-05-01)
 import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useParams, useNavigate, Navigate } from 'react-router-dom';
-import { useDispatch } from 'react-redux';
 import { toast } from 'sonner';
 import { api } from '@/lib/apiClient';
-import { clearAuth } from '@/store/authSlice';
-import type { AppDispatch } from '@/store/index';
 import { CampaignBadge } from '@/components/CampaignBadge';
 import { Progress } from '@/components/ui/progress';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -85,7 +81,6 @@ function recipientStatusClass(status: RecipientStatus): string {
 export function CampaignDetailPage(): React.ReactElement {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const dispatch = useDispatch<AppDispatch>();
   const queryClient = useQueryClient();
 
   // Schedule action local state for the datetime-local input value
@@ -163,17 +158,6 @@ export function CampaignDetailPage(): React.ReactElement {
     },
   });
 
-  // Logout — onSettled fires on both success and 401 (expired token still clears auth)
-  const logoutMutation = useMutation({
-    mutationFn: () => api.post('/auth/logout'),
-    onSettled: () => {
-      // CRITICAL ORDER: dispatch BEFORE navigate.
-      // ProtectedRoute reads Redux synchronously on re-render.
-      dispatch(clearAuth());
-      navigate('/login', { replace: true });
-    },
-  });
-
   // WR-04: guard missing id param before query can fire with undefined
   if (!id) return <Navigate to="/campaigns" replace />;
 
@@ -196,14 +180,6 @@ export function CampaignDetailPage(): React.ReactElement {
           <h1 className="text-xl font-semibold">{campaign.name}</h1>
           <CampaignBadge status={campaign.status} />
         </div>
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={() => logoutMutation.mutate()}
-          disabled={logoutMutation.isPending}
-        >
-          Log out
-        </Button>
       </div>
 
       <Separator />
