@@ -13,7 +13,7 @@ Critical path: Phases 1 → 2 → 3 → 4 → 5 are strictly sequential (each un
 
 ## Phases
 
-- [ ] **Phase 1: Monorepo Foundation & Shared Schemas** - Yarn 4 flat workspaces (backend/frontend/shared), TS+ESLint+Prettier, pino logger, `@campaign/shared` Zod skeleton emitting `dist/`
+- [x] **Phase 1: Monorepo Foundation & Shared Schemas** - Yarn 4 flat workspaces (backend/frontend/shared), TS+ESLint+Prettier, pino logger, `@campaign/shared` Zod skeleton emitting `dist/`
 - [x] **Phase 2: Schema, Migrations & Seed** - Sequelize models + migrations (4-state enum, FKs, indexes, `tracking_token UUID`, `pgcrypto`) + demo seed (completed 2026-04-20)
 - [x] **Phase 3: Authentication** - Split-token JWT auth (access in memory + refresh in httpOnly cookie), Redis denylist, `/auth/*` endpoints, `authenticate` middleware (completed 2026-04-21)
 - [x] **Phase 4: Campaigns & Recipients CRUD** - `/campaigns` + `/recipients` REST with offset pagination (campaigns) + cursor pagination (recipients), server-side status guards, single-SQL stats aggregate (completed 2026-04-21)
@@ -182,9 +182,9 @@ Context: Guards C18 (Vitest 2.1.9 pin via root resolutions, `singleFork` pool se
 **Plans**: 3 plans
 
 Plans:
-- [ ] 08-01-PLAN.md — Project scaffold: package.json deps, vite.config.ts, tsconfig.json, tailwind/postcss configs, shadcn init, vitest.config.ts, test setup + Wave-0 test scaffolds (Wave 1, UI-01)
-- [ ] 08-02-PLAN.md — Redux store + authSlice + axios apiClient with memoized refresh interceptor (Wave 2, UI-05)
-- [ ] 08-03-PLAN.md — App shell: main.tsx, App.tsx, useBootstrap hook, ProtectedRoute + real test assertions green (Wave 3, UI-01/UI-03/UI-04)
+- [x] 08-01-PLAN.md — Project scaffold: package.json deps, vite.config.ts, tsconfig.json, tailwind/postcss configs, shadcn init, vitest.config.ts, test setup + Wave-0 test scaffolds (Wave 1, UI-01)
+- [x] 08-02-PLAN.md — Redux store + authSlice + axios apiClient with memoized refresh interceptor (Wave 2, UI-05)
+- [x] 08-03-PLAN.md — App shell: main.tsx, App.tsx, useBootstrap hook, ProtectedRoute + real test assertions green (Wave 3, UI-01/UI-03/UI-04)
 **UI hint**: yes
 
 Context: Guards C6's frontend half (refresh-race memoization + global `withCredentials`), C12 (Redux only holds auth token + UI flags — React Query owns server state), and locks in the boundary that downstream mutation/polling hooks in Phase 9 will rely on. jsdom polyfill stubs (`TextEncoder`, `structuredClone`, `ResizeObserver`, `matchMedia`) go in the test setup file here so component tests in Phase 9 don't break.
@@ -225,7 +225,13 @@ Context: Guards C13 (invalidate after every mutation; correct `refetchInterval` 
   3. `docker compose up` followed by `docker compose exec api yarn db:seed` produces the demo user documented in README; logging in as that user in the browser shows the 3 seeded campaigns (draft/scheduled/sent) and all happy-path flows work end-to-end (create → schedule → send → watch polling → open pixel via curl)
   4. Root README documents: one-command setup, demo login creds, env vars (`.env.example`), how to run tests, and the optional `yarn workspace @campaign/frontend dev` HMR flow (Vite dev server with `server.proxy` forwarding `/api` to dockerized backend on `:8080`) — covers DOC-01
   5. `docs/DECISIONS.md` covers 4-state-machine rationale, index choices, async queue rationale, open-tracking design, JWT split rationale (5 short sections); README includes a "How I Used Claude Code" section with 2-3 real prompts + 1-2 concrete corrections + an explicit out-of-bounds list — both assembled from a live log kept while building (covers DOC-02, DOC-03)
-**Plans**: TBD
+**Plans**: 4 plans
+
+Plans:
+- [ ] 10-01-PLAN.md — backend/tsconfig.build.json + fix backend/package.json build script + backend/Dockerfile (Wave 1, FOUND-02)
+- [ ] 10-02-PLAN.md — frontend/Dockerfile + nginx.conf (Wave 1, FOUND-03)
+- [ ] 10-03-PLAN.md — Update docker-compose.yml (add api + web services) + update .env.example (Wave 2, FOUND-02/03)
+- [ ] 10-04-PLAN.md — docs/DECISIONS.md 4 new sections + README.md with user-reviewed "How I Used Claude Code" section (Wave 3, DOC-01/02/03) [autonomous: false — user review checkpoint]
 **UI hint**: yes
 
 Context: Postgres + Redis + api containers were scaffolded locally in earlier phases using direct commands (local Postgres + `yarn dev` for the api) — this phase wires them into the compose file for the first time alongside the web container. Guards C14 (health checks are mandatory for the api's db/redis deps — without them parallel startup causes migration failures), C15 (DB host inside Docker is service name `postgres` not `localhost`; env vars via `env_file: .env`). The "How I Used Claude Code" deliverable requires authenticity — the log must be captured *during* build, not reconstructed at the end.
@@ -246,8 +252,8 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6 → 7 → 8 →
 | 7. Backend Tests | 0/2 | Planned | - |
 | 8. Frontend Foundation | 3/3 | Complete | 2026-04-21 |
 | 9. Frontend Pages & Actions | 5/5 | Complete | 2026-04-22 |
-| 10. Full Docker Stack, Integration & Docs | 0/TBD | Not started | - |
+| 10. Full Docker Stack, Integration & Docs | 0/4 | Not started | - |
 
 ---
 *Roadmap created: 2026-04-20*
-*Last updated: 2026-04-22 — Phase 9 complete (5/5 plans; 13 tests green)*
+*Last updated: 2026-04-22 — Phase 10 planned (4 plans, 3 waves)*
