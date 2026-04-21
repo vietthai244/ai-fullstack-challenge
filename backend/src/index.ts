@@ -16,6 +16,7 @@
 import { buildApp } from './app.js';
 import { sequelize } from './db/index.js';
 import { pingRedis, redis } from './lib/redis.js';
+import { sendQueue, sendWorker } from './lib/queue.js';
 import { config } from './config/env.js';
 import { logger } from './util/logger.js';
 
@@ -34,7 +35,12 @@ async function main(): Promise<void> {
   const shutdown = async (signal: string): Promise<void> => {
     logger.info({ signal }, 'shutting down');
     server.close();
-    await Promise.allSettled([sequelize.close(), redis.quit()]);
+    await Promise.allSettled([
+      sequelize.close(),
+      redis.quit(),
+      sendQueue.close(),
+      sendWorker.close(),
+    ]);
     process.exit(0);
   };
   process.on('SIGTERM', () => void shutdown('SIGTERM'));
