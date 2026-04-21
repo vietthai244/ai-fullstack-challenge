@@ -159,7 +159,11 @@ Context: Guards C17 (BIGINT enumeration → use `tracking_token UUID` with 122 b
   3. Concurrent-send atomicity test fires two parallel `POST /campaigns/:id/send` via `Promise.all` on a `draft` campaign and asserts exactly one 202 and one 409 (covers TEST-02 — guards C11)
   4. Stats aggregation test seeds a campaign with known recipient status distribution and asserts `GET /campaigns/:id/stats` returns correct `{ total, sent, failed, opened, open_rate, send_rate }` with two-decimal rounding and no divide-by-zero (covers TEST-03)
   5. Auth middleware test asserts 401 on missing token, 401 on tampered token, and 404 (not 403) on a valid token for user A accessing user B's campaign (covers TEST-04)
-**Plans**: TBD
+**Plans**: 2 plans
+
+Plans:
+- [ ] 07-01-PLAN.md — Test infrastructure: install Vitest 2.1.9 + Supertest, vitest.config.ts (singleFork), globalSetup.ts, setup.ts, helpers/auth.ts, helpers/seed.ts, .env.test (Wave 1, TEST-01..04 infra)
+- [ ] 07-02-PLAN.md — Four test files: status-guard.test.ts (TEST-01), send-atomicity.test.ts (TEST-02), stats.test.ts (TEST-03), auth.test.ts (TEST-04) (Wave 2, TEST-01/02/03/04)
 
 Context: Guards C18 (Vitest 2.1.9 pin via root resolutions, `singleFork` pool serialization against one shared DB, `shared/` dist already built from Phase 1 `postinstall`). App split is important — `app.ts` exports `buildApp()` factory and `index.ts` calls `buildApp().listen(PORT)` so Supertest can import without binding a port. This phase is the first deliverable that proves backend correctness and runs independently of the frontend — safe to parallelize with Phase 8.
 
@@ -227,11 +231,11 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6 → 7 → 8 →
 | 4. Campaigns & Recipients CRUD | 4/4 | Complete | 2026-04-21 |
 | 5. Async Send Queue (Schedule + Send) | 4/4 | Complete | 2026-04-21 |
 | 6. Open Tracking Pixel | 0/1 | Planned | - |
-| 7. Backend Tests | 0/TBD | Not started | - |
+| 7. Backend Tests | 0/2 | Planned | - |
 | 8. Frontend Foundation | 0/TBD | Not started | - |
 | 9. Frontend Pages & Actions | 0/TBD | Not started | - |
 | 10. Full Docker Stack, Integration & Docs | 0/TBD | Not started | - |
 
 ---
 *Roadmap created: 2026-04-20*
-*Last updated: 2026-04-21 — Phase 6 planned (1 plan)*
+*Last updated: 2026-04-21 — Phase 7 planned (2 plans)*
