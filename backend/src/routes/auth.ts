@@ -46,7 +46,12 @@ const COOKIE_OPTS = {
   httpOnly: true,
   secure: config.NODE_ENV === 'production',
   sameSite: 'strict' as const,
-  path: '/auth',                         // Deliberate — NOT '/auth/refresh' (A1)
+  // Path='/auth' not '/auth/refresh': cookie must reach BOTH /auth/refresh
+  // (rotation) and /auth/logout (denylist). No common prefix shorter than
+  // '/auth' covers both endpoints. Trade-off: cookie is also sent to
+  // /auth/register and /auth/login, which ignore req.cookies.rt entirely.
+  // Documented in DECISIONS.md §A1 (Phase 4 deliverable). (WR-02)
+  path: '/auth',
   maxAge: 7 * 24 * 60 * 60 * 1000,       // 7 days in ms
 };
 
