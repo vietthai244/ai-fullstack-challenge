@@ -25,7 +25,7 @@
   - Composite PK `(campaign_id, recipient_id)` on campaign_recipients — covers worker update path
   - UNIQUE index on `users.email` and `recipients.email`
   - FK cascade: `campaign_id` `ON DELETE CASCADE` so deleting a draft campaign cleans up its recipient links
-- [ ] **DATA-03**: Seed script creates one demo user, ten recipients, one draft + one scheduled + one sent campaign for walkthrough
+- [x] **DATA-03**: Seed script creates one demo user, ten recipients, one draft + one scheduled + one sent campaign for walkthrough
 
 ### Authentication
 
@@ -151,7 +151,7 @@ Deferred — tracked but not in current roadmap.
 | FOUND-05 | Phase 1 | Complete (Plan 01-03 / verified Plan 01-04) |
 | DATA-01 | Phase 2 | Complete (Plan 02-02) |
 | DATA-02 | Phase 2 | Complete (Plan 02-03) |
-| DATA-03 | Phase 2 | Pending |
+| DATA-03 | Phase 2 | Complete |
 | AUTH-01 | Phase 3 | Pending |
 | AUTH-02 | Phase 3 | Pending |
 | AUTH-03 | Phase 3 | Pending |
