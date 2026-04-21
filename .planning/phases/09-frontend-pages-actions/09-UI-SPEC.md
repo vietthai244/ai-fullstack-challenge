@@ -65,7 +65,7 @@ Exceptions:
 - Login card: centered in `min-h-screen`, max-width `w-full max-w-md`
 - Campaign list container: `max-w-3xl mx-auto px-4 py-8`
 - Detail page sections: `space-y-6` (24px gap between card sections)
-- Email tokenizer chip height: 28px (`py-0.5 px-2`) — exception to 8-point for inline chip UX
+- Email tokenizer chip: `py-1 px-2` (4px vertical, 8px horizontal). Chip height: 14px line-height + 8px vertical padding = 22px. On 4px grid.
 
 ---
 
@@ -137,9 +137,9 @@ Dark mode: NOT in scope (V2-PLAT-03 deferred). Light mode only.
 | CampaignListPage | "New Campaign" | `variant="default"` (accent) |
 | NewCampaignPage | "Create Campaign" | `variant="default"` (accent) |
 | CampaignDetailPage — Send | "Send Now" | `variant="default"` (accent) |
-| CampaignDetailPage — Schedule | "Schedule" | `variant="outline"` |
-| CampaignDetailPage — Delete | "Delete" | `variant="outline"` |
-| Header / Nav — Logout | "Logout" | `variant="ghost"` |
+| CampaignDetailPage — Schedule | "Schedule Campaign" | `variant="outline"` |
+| CampaignDetailPage — Delete | "Delete Campaign" | `variant="outline"` |
+| Header / Nav — Logout | "Log out" | `variant="ghost"` |
 
 Source: REQUIREMENTS.md UI-02/06/07/08/09/10/11/13.
 
@@ -184,7 +184,7 @@ Two destructive actions require `AlertDialog` confirmation before mutation fires
 - Cancel button: "Cancel"
 
 Schedule is NOT destructive — no confirm dialog. Schedule action renders an inline
-`datetime-local` input + "Schedule" button directly on the detail page.
+`datetime-local` input + "Schedule Campaign" button directly on the detail page.
 
 Source: Phase 8 UI-SPEC copywriting contract, RESEARCH.md Pattern 9.
 
@@ -297,7 +297,7 @@ Form: `react-hook-form` + `CreateCampaignSchema` from `@campaign/shared`.
 | Body | `Label` + `Textarea` rows=6 | required, string |
 | Recipients | `EmailTokenizer` (custom) | min 1 email, valid email per item |
 
-`EmailTokenizer` behavior: comma or Enter key converts typed text to a chip token (rendered as `span.rounded-full.bg-secondary`). Backspace on empty input removes last chip. `onBlur` finalizes pending text as chip.
+`EmailTokenizer` behavior: comma or Enter key converts typed text to a chip token (rendered as `span.rounded-full.bg-secondary py-1 px-2`). Backspace on empty input removes last chip. `onBlur` finalizes pending text as chip.
 
 On submit: `useMutation` → `POST /campaigns` → `navigate('/campaigns/:id')` on success.
 Submit button: "Create Campaign" → "Creating..." while pending.
@@ -317,13 +317,13 @@ Layout: `max-w-3xl mx-auto px-4 py-8`. Sections separated by `Separator` + 24px 
 
 | Campaign Status | Actions Shown |
 |----------------|--------------|
-| `draft` | Schedule button + Send Now (AlertDialog) + Delete (AlertDialog) |
-| `scheduled` | Send Now (AlertDialog) + Delete (AlertDialog) |
+| `draft` | Schedule Campaign button + Send Now (AlertDialog) + Delete Campaign (AlertDialog) |
+| `scheduled` | Send Now (AlertDialog) + Delete Campaign (AlertDialog) |
 | `sending` | No actions. Badge shows amber spinner. Text: "Sending in progress..." (text-sm muted) |
 | `sent` | No actions. |
 
 **Schedule action (UI-09):**
-Renders inline: `Input type="datetime-local"` with `min` = current datetime ISO (truncated to minute), + "Schedule" `Button variant="outline"`.
+Renders inline: `Input type="datetime-local"` with `min` = current datetime ISO (truncated to minute), + "Schedule Campaign" `Button variant="outline"`.
 Before POST: `new Date(inputValue).toISOString()` to convert local time to UTC ISO.
 `useMutation` → `POST /campaigns/:id/schedule` with `{ scheduled_at: isoString }`.
 On success: `invalidateQueries(['campaign', id])` + `invalidateQueries(['campaigns'])`.
