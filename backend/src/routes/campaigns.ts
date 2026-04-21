@@ -12,6 +12,7 @@ import {
 import { validate } from '../middleware/validate.js';
 import { authenticate } from '../middleware/authenticate.js';
 import * as campaignService from '../services/campaignService.js';
+import { BadRequestError } from '../util/errors.js';
 
 export const campaignsRouter: Router = Router();
 campaignsRouter.use(authenticate); // <- C7: every route below is guarded
@@ -51,6 +52,7 @@ campaignsRouter.get(
   async (req: Request, res: Response, next: NextFunction) => {
     try {
       const campaignId = Number(req.params.id);
+      if (!Number.isInteger(campaignId) || campaignId <= 0) throw new BadRequestError('INVALID_CAMPAIGN_ID');
       const result = await campaignService.getCampaignDetail(campaignId, req.user!.id);
       res.json({ data: result });
     } catch (err) {
@@ -66,6 +68,7 @@ campaignsRouter.patch(
   async (req: Request, res: Response, next: NextFunction) => {
     try {
       const campaignId = Number(req.params.id);
+      if (!Number.isInteger(campaignId) || campaignId <= 0) throw new BadRequestError('INVALID_CAMPAIGN_ID');
       const updated = await campaignService.updateCampaign(campaignId, req.user!.id, req.body);
       res.json({ data: updated });
     } catch (err) {
@@ -80,6 +83,7 @@ campaignsRouter.delete(
   async (req: Request, res: Response, next: NextFunction) => {
     try {
       const campaignId = Number(req.params.id);
+      if (!Number.isInteger(campaignId) || campaignId <= 0) throw new BadRequestError('INVALID_CAMPAIGN_ID');
       await campaignService.deleteCampaign(campaignId, req.user!.id);
       res.json({ data: { ok: true } });
     } catch (err) {
@@ -95,6 +99,7 @@ campaignsRouter.get(
   async (req: Request, res: Response, next: NextFunction) => {
     try {
       const campaignId = Number(req.params.id);
+      if (!Number.isInteger(campaignId) || campaignId <= 0) throw new BadRequestError('INVALID_CAMPAIGN_ID');
       const campaign = await campaignService.getCampaignDetail(campaignId, req.user!.id);
       res.json({ data: campaign.stats });
     } catch (err) {
