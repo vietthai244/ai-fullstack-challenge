@@ -1,5 +1,5 @@
 # docker-compose.yml (repo root)
-# Phase 2: postgres only. Phase 10 extends with redis + api + web.
+# Phase 2: postgres. Phase 3 adds redis. Phase 10 extends with api + web.
 services:
   postgres:
     image: postgres:16-alpine
@@ -17,5 +17,18 @@ services:
     volumes:
       - pgdata:/var/lib/postgresql/data
 
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    volumes:
+      - redisdata:/data
+
 volumes:
   pgdata:
+  redisdata:
