@@ -62,3 +62,9 @@ export const CampaignSchema = z.object({
   updatedAt: z.string(),
 });
 export type Campaign = z.infer<typeof CampaignSchema>;
+
+// CAMP-06 — Schedule request body (ISO 8601 shape only; future-date business rule enforced in service layer)
+export const ScheduleCampaignSchema = z.object({
+  scheduled_at: z.string().datetime({ message: 'scheduled_at must be ISO 8601' }),
+});
+export type ScheduleCampaignInput = z.infer<typeof ScheduleCampaignSchema>;
