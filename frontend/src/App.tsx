@@ -1,41 +1,59 @@
 // frontend/src/App.tsx
 //
-// Phase 8 (UI-01/UI-03): App shell — route tree + bootstrap.
+// Phase 9 (UI-01/UI-03): App shell — route tree + bootstrap.
+// Phase 8 placeholder functions (LoginPage, AppShell) replaced with real page imports.
 // useBootstrap() is called unconditionally at top level — runs on ALL routes, not just /login.
 // Toaster is mounted at root so Phase 9 toast calls work from any component.
-// Phase 8 renders no pages — LoginPage and CampaignsLayout are Phase 9 placeholders.
 import { Routes, Route, Navigate } from 'react-router-dom';
 import { useBootstrap } from '@/hooks/useBootstrap';
 import { ProtectedRoute } from '@/components/ProtectedRoute';
 import { Toaster } from '@/components/ui/sonner';
-
-// Phase 9 placeholders — prevent import errors; replaced in Phase 9
-function LoginPage(): React.ReactElement {
-  return <div data-testid="login-page">Login (Phase 9)</div>;
-}
-
-function AppShell(): React.ReactElement {
-  return <div data-testid="app-shell">App (Phase 9)</div>;
-}
+import { LoginPage } from '@/pages/LoginPage';
+import { CampaignListPage } from '@/pages/CampaignListPage';
+import { NewCampaignPage } from '@/pages/NewCampaignPage';
+import { CampaignDetailPage } from '@/pages/CampaignDetailPage';
 
 export default function App(): React.ReactElement {
   // Bootstrap fires /auth/refresh → /auth/me on mount.
-  // Must be here (not in LoginPage) to run on every route.
+  // Must be here (not in individual pages) to run on every route.
   useBootstrap();
 
   return (
     <>
       <Routes>
+        {/* Public route — login page accessible without auth */}
         <Route path="/login" element={<LoginPage />} />
+
+        {/* Protected routes — ProtectedRoute redirects to /login if not authed */}
         <Route
-          path="/*"
+          path="/campaigns"
           element={
             <ProtectedRoute>
-              <AppShell />
+              <CampaignListPage />
             </ProtectedRoute>
           }
         />
-        <Route path="*" element={<Navigate to="/" replace />} />
+        {/* /campaigns/new must appear before /campaigns/:id — avoid "new" matching as id */}
+        <Route
+          path="/campaigns/new"
+          element={
+            <ProtectedRoute>
+              <NewCampaignPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/campaigns/:id"
+          element={
+            <ProtectedRoute>
+              <CampaignDetailPage />
+            </ProtectedRoute>
+          }
+        />
+
+        {/* Default redirect — unauthenticated hits /login via ProtectedRoute on /campaigns */}
+        <Route path="/" element={<Navigate to="/campaigns" replace />} />
+        <Route path="*" element={<Navigate to="/campaigns" replace />} />
       </Routes>
       <Toaster />
     </>
