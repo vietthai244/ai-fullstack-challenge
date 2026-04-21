@@ -18,7 +18,11 @@ If everything else slips, the API must still enforce the spec's state transition
 
 <!-- Shipped and confirmed valuable. -->
 
-(None yet — ship to validate)
+- [x] JWT auth: access token (in-memory, short-lived) + refresh token (httpOnly cookie) *(Phase 3)*
+- [x] `/auth/register`, `/auth/login`, `/auth/refresh`, `/auth/logout` *(Phase 3)*
+- [x] Redis denylist for refresh-token rotation + CSRF guard + `authenticate` middleware *(Phase 3)*
+- [x] PostgreSQL schema + Sequelize migrations + seed script *(Phase 2)*
+- [x] Zod input validation (shared schemas package) *(Phase 1)*
 
 ### Active
 
@@ -26,10 +30,6 @@ If everything else slips, the API must still enforce the spec's state transition
 
 **Backend**
 
-- [ ] PostgreSQL schema: User, Campaign, Recipient, CampaignRecipient (per spec, with `sending` status)
-- [ ] Sequelize migrations + seed script (demo user + recipients)
-- [ ] JWT auth: access token (in-memory, short-lived) + refresh token (httpOnly cookie)
-- [ ] `/auth/register`, `/auth/login`, `/auth/refresh`, `/auth/logout`
 - [ ] `/campaigns` CRUD with status-gated edit/delete (only when `draft`)
 - [ ] `/campaigns/:id/schedule` (scheduled_at must be future)
 - [ ] `/campaigns/:id/send` enqueues a BullMQ job; worker randomly marks recipients `sent` or `failed`; campaign transitions draft/scheduled → sending → sent
@@ -139,4 +139,4 @@ This document evolves at phase transitions and milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-04-20 after initialization*
+*Last updated: 2026-04-21 after Phase 3 (Authentication) — split-token JWT + Redis denylist + authenticate middleware shipped*
