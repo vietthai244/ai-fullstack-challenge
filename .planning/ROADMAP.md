@@ -201,7 +201,14 @@ Context: Guards C6's frontend half (refresh-race memoization + global `withCrede
   3. `/campaigns/:id` shows `send_rate` and `open_rate` shadcn Progress bars, per-recipient status list, and conditional action buttons: Schedule (date-time-local with `new Date(value).toISOString()` timezone conversion) + Send (confirm dialog) + Delete (confirm dialog) rendered only when server status permits
   4. While `campaign.status === 'sending'`, the detail + stats queries auto-refetch every 2s (`refetchInterval: (q) => q.state.data?.status === 'sending' ? 2000 : false`) and stop on transition to `sent`; mutations call `queryClient.invalidateQueries` on success; Logout hits `/auth/logout`, clears Redux auth, and redirects to `/login`
   5. Global React Query error handler surfaces API `error.message` via toast; every fetching state renders a shadcn Skeleton; the `CampaignBadge` Vitest + @testing-library/react test asserts all 4 status variants render the correct color class and label (covers TEST-05)
-**Plans**: TBD
+**Plans**: 5 plans
+
+Plans:
+- [ ] 09-01-PLAN.md — Install deps + shadcn components + main.tsx QueryCache + CampaignBadge + TEST-05 (Wave 1, UI-12, TEST-05)
+- [ ] 09-02-PLAN.md — LoginPage (Wave 2, UI-02)
+- [ ] 09-03-PLAN.md — CampaignListPage with offset infinite scroll (Wave 2, UI-06)
+- [ ] 09-04-PLAN.md — NewCampaignPage with EmailTokenizer (Wave 3, UI-07)
+- [ ] 09-05-PLAN.md — CampaignDetailPage + App.tsx wiring (Wave 4, UI-08/09/10/11/13)
 **UI hint**: yes
 
 Context: Guards C13 (invalidate after every mutation; correct `refetchInterval` signature for React Query v5), m1 (exhaustive TS switch covering all 4 states — `sending` badge must not be forgotten), and the `datetime-local` timezone trap from FEATURES.md. The Schedule action must convert local time to ISO UTC before POST. This is the single largest phase — plan-phase step should split it into plans along the four pages + shared components.
