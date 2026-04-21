@@ -3,15 +3,15 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: executing
-stopped_at: Phase 3 plan 03 complete (Wave 3 auth routes: 5 endpoints + COOKIE_OPTS + rotation + denylist + CSRF) — ready for plan 03-04
-last_updated: "2026-04-21T02:10:00Z"
-last_activity: 2026-04-21 -- Phase 3 plan 03 executed (3/3 tasks, 1 commit: e7eb378)
+stopped_at: Phase 3 plan 04 complete — Phase 3 CLOSED (4/4 plans done). Ready for Phase 4 (Campaigns & Recipients CRUD).
+last_updated: "2026-04-21T01:43:16Z"
+last_activity: 2026-04-21 -- Phase 3 plan 04 executed (4/4 tasks, 4 commits: 0f315f8, 5f0b478, 040f915, 2bfdfe4)
 progress:
   total_phases: 10
-  completed_phases: 2
+  completed_phases: 3
   total_plans: 12
-  completed_plans: 8
-  percent: 20
+  completed_plans: 12
+  percent: 30
 ---
 
 # Project State
@@ -25,12 +25,13 @@ See: .planning/PROJECT.md (updated 2026-04-20)
 
 ## Current Position
 
-Phase: 3 (Authentication) — EXECUTING (3/4 plans executed)
-Plan: next is 03-04 (Wave 4 — buildApp + authenticate middleware + smoke harness)
-Status: Plan 03-03 complete (3/3 tasks, 1 commit: e7eb378)
-Last activity: 2026-04-21 -- Plan 03-03 executed (auth routes: 5 endpoints + COOKIE_OPTS + rotation + denylist + CSRF)
+Phase: 3 (Authentication) — COMPLETE (4/4 plans executed)
+Phase: 4 (Campaigns & Recipients CRUD) — NEXT
+Plan: next is Phase 4 (plan structure TBD)
+Status: Plan 03-04 complete (4/4 tasks, 4 commits: 0f315f8, 5f0b478, 040f915, 2bfdfe4)
+Last activity: 2026-04-21 -- Plan 03-04 executed (authenticate middleware + buildApp + smoke harness + DECISIONS.md)
 
-Progress: [██░░░░░░░░] 22%  (11/51 v1 REQ-IDs done ≈ 22%; 9/12 plans committed [4 phase-1 done + 4 phase-2 done + 3/4 phase-3 done] ≈ 75% planned coverage for current milestone)
+Progress: [███░░░░░░░] 30%  (13/51 v1 REQ-IDs done ≈ 25%; 12/12 plans committed [4 phase-1 + 2 phase-2 + 4/4 phase-3] ≈ 100% planned coverage for Phase 3)
 
 ## Performance Metrics
 
@@ -92,6 +93,10 @@ Recent structural decisions affecting current work:
 - Plan 03-03: Path=/auth (not /auth/refresh) cookie path — deliberate ARCHITECTURE.md §8 deviation so /logout can receive+clear cookie to denylist jti; DECISIONS.md note drafted in Plan 04
 - Plan 03-03: Forward import { authenticate } unresolved until Plan 04 lands authenticate.ts — no typecheck run in Plan 03 by design (Plan 04 acceptance gate runs full typecheck)
 - Plan 03-03: All 3 tasks implemented in single file Write + verified atomically; committed as e7eb378
+- Plan 03-04: buildApp() split in Phase 3 (not Phase 7) so Supertest needs no rewrite — structural investment
+- Plan 03-04: BIGINT PKs returned as string by Postgres/Sequelize — smoke jq checks accept string|number
+- Plan 03-04: ESLint argsIgnorePattern '^_' added for backend files — honors _next convention in errorHandler
+- Plan 03-04: Phase 3 acceptance gate (structural grep + live curl) all green; smoke suite passed all 7 AUTH-NN
 
 ### Pending Todos
 
@@ -111,5 +116,5 @@ None yet.
 ## Session Continuity
 
 Last session: 2026-04-21
-Stopped at: Completed 03-03 (auth routes: 5 endpoints + COOKIE_OPTS + rotation + denylist + CSRF). Next is Plan 03-04 (Wave 4 — buildApp factory + authenticate middleware + stub routers + smoke harness).
-Resume file: .planning/phases/03-authentication/03-04-PLAN.md (or /gsd-execute-phase 3 to continue Wave 4)
+Stopped at: Phase 3 CLOSED — 4/4 plans complete. All 7 AUTH-NN requirements satisfied. buildApp() factory, authenticate middleware, stub routers, smoke harness, DECISIONS.md all shipped.
+Resume file: Phase 4 plan files (run /gsd-plan-phase 4 or /gsd-execute-phase 4)

@@ -15,7 +15,7 @@ Critical path: Phases 1 → 2 → 3 → 4 → 5 are strictly sequential (each un
 
 - [ ] **Phase 1: Monorepo Foundation & Shared Schemas** - Yarn 4 flat workspaces (backend/frontend/shared), TS+ESLint+Prettier, pino logger, `@campaign/shared` Zod skeleton emitting `dist/`
 - [x] **Phase 2: Schema, Migrations & Seed** - Sequelize models + migrations (4-state enum, FKs, indexes, `tracking_token UUID`, `pgcrypto`) + demo seed (completed 2026-04-20)
-- [ ] **Phase 3: Authentication** - Split-token JWT auth (access in memory + refresh in httpOnly cookie), Redis denylist, `/auth/*` endpoints, `authenticate` middleware
+- [x] **Phase 3: Authentication** - Split-token JWT auth (access in memory + refresh in httpOnly cookie), Redis denylist, `/auth/*` endpoints, `authenticate` middleware (completed 2026-04-21)
 - [ ] **Phase 4: Campaigns & Recipients CRUD** - `/campaigns` + `/recipients` REST with cursor pagination, server-side status guards, single-SQL stats aggregate
 - [ ] **Phase 5: Async Send Queue (Schedule + Send)** - BullMQ queue+worker, atomic send guard, transaction-wrapped simulation, delayed schedule jobs with re-check on fire
 - [ ] **Phase 6: Open Tracking Pixel** - Public `GET /track/open/:trackingToken` returns 43-byte GIF + idempotent `opened_at` UPDATE, always-200 (oracle defense)
@@ -80,7 +80,7 @@ Plans:
 - [x] 03-01-PLAN.md — Scaffolding: docker-compose redis + Phase 3 env vars + config/env.ts + lib/redis.ts + util/errors.ts + middleware/{validate,errorHandler}.ts (Wave 1, AUTH-01..07 infra)
 - [x] 03-02-PLAN.md — Primitives: lib/tokens.ts (HS256 + separate secrets + jti) + services/authService.ts (bcrypt + timing defense) + extended shared/src/schemas/auth.ts (Wave 2, AUTH-01..04)
 - [x] 03-03-PLAN.md — /auth routes: register/login/refresh/logout/me with COOKIE_OPTS path=/auth + CSRF + rotation + denylist (Wave 3, AUTH-01..05)
-- [ ] 03-04-PLAN.md — authenticate middleware + campaigns/recipients stub routers + buildApp factory + index.ts rewrite + smoke harness + DECISIONS.md note (Wave 4, AUTH-06/07 + phase acceptance gate)
+- [x] 03-04-PLAN.md — authenticate middleware + campaigns/recipients stub routers + buildApp factory + index.ts rewrite + smoke harness + DECISIONS.md note (Wave 4, AUTH-06/07 + phase acceptance gate)
 
 Context: Guards C6 (refresh-race + missing `withCredentials` + no-rotation + no-denylist variants — all handled by rotation + Redis denylist; frontend interceptor is Phase 8), C7 (router-level `authenticate` usage so later-added routes cannot be accidentally unprotected; `/track/*` mounts on a separate public router), m2 (startup-time `JWT_ACCESS_SECRET` + `JWT_REFRESH_SECRET` env check), m6 (separate secrets for access vs refresh), and the AUTH-07 "cross-user = 404 not 403" enumeration-defense convention.
 
