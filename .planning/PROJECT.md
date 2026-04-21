@@ -39,7 +39,7 @@ If everything else slips, the API must still enforce the spec's state transition
 - [ ] Cursor-based pagination on `GET /campaigns` (created_at DESC + id tiebreaker)
 - [ ] Zod input validation (shared schemas package)
 - [ ] Indexes with explainable rationale (FKs, campaigns.status, campaigns.scheduled_at, campaign_recipients.campaign_id)
-- [ ] Vitest + Supertest: at least 3 meaningful tests covering state-machine rules
+- [x] Vitest + Supertest: status-guard, send-atomicity, stats aggregation, auth boundary tests *(Phase 7)*
 
 **Frontend**
 
