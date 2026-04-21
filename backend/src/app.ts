@@ -14,11 +14,8 @@
 //   5. /auth             — PUBLIC router (auth endpoints themselves)
 //   6. /campaigns        — PROTECTED (router-level authenticate via C7)
 //   7. /recipients       — PROTECTED (router-level authenticate via C7)
-//   8. errorHandler      — LAST — Express 4 tail-middleware contract
-//
-// Phase 6 will INSERT `app.use('/track', trackRouter)` BEFORE errorHandler
-// and AFTER cookieParser. It stays at app-level (not nested inside
-// campaignsRouter) so it never inherits `authenticate` — pixel is public.
+//   8. /track            — PUBLIC router (tracking pixel, never gated — C17)
+//   9. errorHandler      — LAST — Express 4 tail-middleware contract
 
 import express, { type Express } from 'express';
 import cookieParser from 'cookie-parser';
@@ -26,6 +23,7 @@ import { httpLogger } from './util/httpLogger.js';
 import { authRouter } from './routes/auth.js';
 import { campaignsRouter } from './routes/campaigns.js';
 import { recipientsRouter } from './routes/recipients.js';
+import { trackRouter } from './routes/track.js';
 import { errorHandler } from './middleware/errorHandler.js';
 
 export function buildApp(): Express {
@@ -52,7 +50,10 @@ export function buildApp(): Express {
   app.use('/campaigns', campaignsRouter);
   app.use('/recipients', recipientsRouter);
 
-  // 8. TAIL error handler (4-arg signature — Express 4 contract)
+  // 8. Public: tracking pixel (no authenticate — C17 oracle defense, T-06-04)
+  app.use('/track', trackRouter);  // PUBLIC — never inherits authenticate
+
+  // 9. TAIL error handler (4-arg signature — Express 4 contract)
   app.use(errorHandler);
 
   return app;
