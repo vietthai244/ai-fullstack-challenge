@@ -29,11 +29,11 @@
 
 ### Authentication
 
-- [ ] **AUTH-01**: User can register via `POST /auth/register` — email uniqueness enforced, password bcrypt-hashed
-- [ ] **AUTH-02**: User can login via `POST /auth/login` — returns access token in response body (short TTL, kept in memory) and sets refresh token in httpOnly + SameSite cookie
-- [ ] **AUTH-03**: User can rotate tokens via `POST /auth/refresh` using the refresh cookie
-- [ ] **AUTH-04**: User can logout via `POST /auth/logout` — revokes refresh token via Redis denylist and clears cookie
-- [ ] **AUTH-05**: `GET /auth/me` returns the authenticated user (used by frontend to rehydrate session after refresh)
+- [x] **AUTH-01**: User can register via `POST /auth/register` — email uniqueness enforced, password bcrypt-hashed
+- [x] **AUTH-02**: User can login via `POST /auth/login` — returns access token in response body (short TTL, kept in memory) and sets refresh token in httpOnly + SameSite cookie
+- [x] **AUTH-03**: User can rotate tokens via `POST /auth/refresh` using the refresh cookie
+- [x] **AUTH-04**: User can logout via `POST /auth/logout` — revokes refresh token via Redis denylist and clears cookie
+- [x] **AUTH-05**: `GET /auth/me` returns the authenticated user (used by frontend to rehydrate session after refresh)
 - [ ] **AUTH-06**: JWT middleware guards `/campaigns/*` and `/recipients/*` — 401 on missing/invalid token
 - [ ] **AUTH-07**: Users can only access campaigns they created — cross-user access returns 404 (not 403, to avoid enumeration)
 

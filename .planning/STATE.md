@@ -3,9 +3,9 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: executing
-stopped_at: Phase 3 plan 02 complete (Wave 2 primitives: shared auth schemas + tokens.ts + authService.ts) — ready for plan 03-03
-last_updated: "2026-04-21T01:30:00Z"
-last_activity: 2026-04-21 -- Phase 3 plan 02 executed (3/3 tasks, 3 commits: 2a7c705 e2fc46f 5ca08b5)
+stopped_at: Phase 3 plan 03 complete (Wave 3 auth routes: 5 endpoints + COOKIE_OPTS + rotation + denylist + CSRF) — ready for plan 03-04
+last_updated: "2026-04-21T02:10:00Z"
+last_activity: 2026-04-21 -- Phase 3 plan 03 executed (3/3 tasks, 1 commit: e7eb378)
 progress:
   total_phases: 10
   completed_phases: 2
@@ -25,12 +25,12 @@ See: .planning/PROJECT.md (updated 2026-04-20)
 
 ## Current Position
 
-Phase: 3 (Authentication) — EXECUTING (2/4 plans executed)
-Plan: next is 03-03 (Wave 3 — auth routes: register, login, refresh, logout, me)
-Status: Plan 03-02 complete (3/3 tasks, 3 commits)
-Last activity: 2026-04-21 -- Plan 03-02 executed (shared auth schemas, tokens.ts, authService.ts)
+Phase: 3 (Authentication) — EXECUTING (3/4 plans executed)
+Plan: next is 03-04 (Wave 4 — buildApp + authenticate middleware + smoke harness)
+Status: Plan 03-03 complete (3/3 tasks, 1 commit: e7eb378)
+Last activity: 2026-04-21 -- Plan 03-03 executed (auth routes: 5 endpoints + COOKIE_OPTS + rotation + denylist + CSRF)
 
-Progress: [██░░░░░░░░] 20%  (6/51 v1 REQ-IDs done ≈ 12%; 8/12 plans committed [4 phase-1 done + 4 phase-2 done + 4 phase-3 planned] ≈ 67% planned coverage for current milestone)
+Progress: [██░░░░░░░░] 22%  (11/51 v1 REQ-IDs done ≈ 22%; 9/12 plans committed [4 phase-1 done + 4 phase-2 done + 3/4 phase-3 done] ≈ 75% planned coverage for current milestone)
 
 ## Performance Metrics
 
@@ -89,6 +89,9 @@ Recent structural decisions affecting current work:
 - Plan 03-02: TIMING_DUMMY_HASH cost must match config.BCRYPT_COST (=10) — cost mismatch reintroduces timing oracle defeating P3-4 defense
 - Plan 03-02: signRefresh decodes its own freshly-signed token to surface exp — avoids storing TTL as a magic constant and ensures jti/exp are always in sync
 - Plan 03-02: Comment strings must avoid verbatim grep-assertion patterns — paraphrase descriptions per carry-forward from Plans 01-04/02-03
+- Plan 03-03: Path=/auth (not /auth/refresh) cookie path — deliberate ARCHITECTURE.md §8 deviation so /logout can receive+clear cookie to denylist jti; DECISIONS.md note drafted in Plan 04
+- Plan 03-03: Forward import { authenticate } unresolved until Plan 04 lands authenticate.ts — no typecheck run in Plan 03 by design (Plan 04 acceptance gate runs full typecheck)
+- Plan 03-03: All 3 tasks implemented in single file Write + verified atomically; committed as e7eb378
 
 ### Pending Todos
 
@@ -108,5 +111,5 @@ None yet.
 ## Session Continuity
 
 Last session: 2026-04-21
-Stopped at: Phase 3 planned (RESEARCH + VALIDATION + PATTERNS + 4 PLANs committed; plan-checker 0 blockers + 5 warnings accepted). Next is executing Plan 03-01 (Wave 1 scaffolding: docker-compose redis service + backend/.env keys + 4 new deps + config/env.ts fail-fast + lib/redis.ts + util/errors.ts HttpError family + middleware/{validate,errorHandler}.ts).
-Resume file: .planning/phases/03-authentication/03-01-PLAN.md (or /gsd-execute-phase 3 to run the full Phase 3 wave chain)
+Stopped at: Completed 03-03 (auth routes: 5 endpoints + COOKIE_OPTS + rotation + denylist + CSRF). Next is Plan 03-04 (Wave 4 — buildApp factory + authenticate middleware + stub routers + smoke harness).
+Resume file: .planning/phases/03-authentication/03-04-PLAN.md (or /gsd-execute-phase 3 to continue Wave 4)
