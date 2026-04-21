@@ -20,7 +20,7 @@ Critical path: Phases 1 → 2 → 3 → 4 → 5 are strictly sequential (each un
 - [x] **Phase 5: Async Send Queue (Schedule + Send)** - BullMQ queue+worker, atomic send guard, transaction-wrapped simulation, delayed schedule jobs with re-check on fire (completed 2026-04-21)
 - [x] **Phase 6: Open Tracking Pixel** - Public `GET /track/open/:trackingToken` returns 43-byte GIF + idempotent `opened_at` UPDATE, always-200 (oracle defense) (completed 2026-04-21)
 - [x] **Phase 7: Backend Tests** - Vitest + Supertest covering status-guard 409s, concurrent-send atomicity, stats aggregation, auth 401/cross-user 404 (completed 2026-04-21)
-- [ ] **Phase 8: Frontend Foundation** - Vite + React 18 + Tailwind + shadcn + Redux + React Query + axios refresh interceptor + bootstrap + route guard
+- [x] **Phase 8: Frontend Foundation** - Vite + React 18 + Tailwind + shadcn + Redux + React Query + axios refresh interceptor + bootstrap + route guard (completed 2026-04-21)
 - [ ] **Phase 9: Frontend Pages & Actions** - Login, campaigns list (infinite scroll), new-campaign form, detail page with polling + Schedule/Send/Delete/Logout actions + CampaignBadge test
 - [ ] **Phase 10: Full Docker Stack, Integration & Docs** - Full `docker compose up` (postgres+redis+api+nginx-served web), README with demo login + "How I Used Claude Code", `docs/DECISIONS.md`
 
@@ -237,7 +237,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6 → 7 → 8 →
 | 5. Async Send Queue (Schedule + Send) | 4/4 | Complete | 2026-04-21 |
 | 6. Open Tracking Pixel | 0/1 | Planned | - |
 | 7. Backend Tests | 0/2 | Planned | - |
-| 8. Frontend Foundation | 0/3 | Not started | - |
+| 8. Frontend Foundation | 3/3 | Complete | 2026-04-21 |
 | 9. Frontend Pages & Actions | 0/TBD | Not started | - |
 | 10. Full Docker Stack, Integration & Docs | 0/TBD | Not started | - |
 

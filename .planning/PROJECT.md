@@ -47,8 +47,8 @@ If everything else slips, the API must still enforce the spec's state transition
 - [ ] `/campaigns` list with status badges, cursor pagination, skeleton loaders
 - [ ] `/campaigns/new` form (name, subject, body, recipient emails)
 - [ ] `/campaigns/:id` detail: stats (progress bars for open_rate / send_rate), recipient list, conditional Schedule/Send/Delete buttons
-- [ ] Redux Toolkit for auth/UI state; React Query for server state
-- [ ] shadcn/ui + Tailwind components
+- [x] Redux Toolkit for auth/UI state; React Query for server state *(Phase 8)*
+- [x] shadcn/ui + Tailwind components *(Phase 8)*
 - [ ] Status badges: draft=grey, scheduled=blue, sending=amber, sent=green
 - [ ] Error and loading states across all pages
 - [ ] Vitest + @testing-library/react for 1–2 key component tests
