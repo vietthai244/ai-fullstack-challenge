@@ -324,6 +324,7 @@ export async function scheduleCampaign(
   scheduledAt: string,
 ): Promise<void> {
   const scheduledDate = new Date(scheduledAt);
+  if (isNaN(scheduledDate.getTime())) throw new BadRequestError('INVALID_SCHEDULED_AT');
   if (scheduledDate <= new Date()) throw new BadRequestError('SCHEDULED_AT_NOT_FUTURE');
 
   const [count] = await Campaign.update(
