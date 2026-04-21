@@ -61,24 +61,42 @@ yarn workspace @campaign/frontend test
 
 Backend tests require `DATABASE_URL` (default local Postgres) and `REDIS_URL` (default local Redis) set in the environment. Tests truncate all tables before each test and run serially (`singleFork: true`).
 
-## Developer HMR Flow (optional)
+## Local Development (without Docker)
 
-For frontend hot-reload development against the Docker API:
+Run backend and frontend separately for hot-reload development.
+
+**Prerequisites:** PostgreSQL 16 and Redis 7 running locally.
+
+### Backend (port 3000)
 
 ```bash
-# 1. Start the Docker stack (api + postgres + redis, but not web)
-docker compose up postgres redis api
-
-# 2. In a separate terminal, start the Vite dev server
-yarn workspace @campaign/frontend dev
-# Opens at http://localhost:5173
-# Vite proxies /api/* and /track/* to http://localhost:3000 (the Docker api container)
+# Terminal 1
+cp .env.example .env          # fill in JWT secrets + DATABASE_URL + REDIS_URL
+yarn workspace @campaign/backend dev
+# API available at http://localhost:3000
 ```
 
-Note: The api container does NOT expose port 3000 to the host in the default compose file.
-For HMR, either:
-- Run the backend locally: `yarn workspace @campaign/backend dev` (requires local Postgres + Redis)
-- Or temporarily add `ports: ["3000:3000"]` to the api service in docker-compose.yml (revert before committing)
+### Frontend (port 5173)
+
+```bash
+# Terminal 2
+yarn workspace @campaign/frontend dev
+# App available at http://localhost:5173
+# Vite proxies /api/* and /track/* → http://localhost:3000
+```
+
+Visit `http://localhost:5173/register` to create an account, then log in.
+
+### Port reference
+
+| Port | Service |
+|------|---------|
+| 3000 | Express API (backend) |
+| 5173 | Vite dev server (frontend) |
+| 5432 | PostgreSQL |
+| 6379 | Redis |
+
+> **Docker stack** runs everything behind nginx on a single port — `http://localhost:8080`. See Quick Start above.
 
 ## Corepack Note (for local development without Docker)
 
