@@ -8,6 +8,7 @@ import {
   CreateCampaignSchema,
   UpdateCampaignSchema,
   OffsetPageQuerySchema,
+  ScheduleCampaignSchema,
 } from '@campaign/shared';
 import { validate } from '../middleware/validate.js';
 import { authenticate } from '../middleware/authenticate.js';
@@ -102,6 +103,40 @@ campaignsRouter.get(
       if (!Number.isInteger(campaignId) || campaignId <= 0) throw new BadRequestError('INVALID_CAMPAIGN_ID');
       const campaign = await campaignService.getCampaignDetail(campaignId, req.user!.id);
       res.json({ data: campaign.stats });
+    } catch (err) {
+      next(err);
+    }
+  },
+);
+
+// POST /campaigns/:id/send — atomic draft|scheduled → sending transition (CAMP-07, C11)
+// Returns 202 on success; 409 when rowCount=0 (ConflictError from service); no request body needed.
+campaignsRouter.post(
+  '/:id/send',
+  async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const campaignId = Number(req.params.id);
+      if (!Number.isInteger(campaignId) || campaignId <= 0) throw new BadRequestError('INVALID_CAMPAIGN_ID');
+      await campaignService.triggerSend(campaignId, req.user!.id);
+      res.status(202).json({ data: { id: campaignId, status: 'sending' } });
+    } catch (err) {
+      next(err);
+    }
+  },
+);
+
+// POST /campaigns/:id/schedule — set scheduled_at + enqueue delayed job (CAMP-06)
+// Body: { scheduled_at: ISO8601 string }
+// Returns 202 on success; 400 if past date (BadRequestError from service); 409 if non-draft.
+campaignsRouter.post(
+  '/:id/schedule',
+  validate(ScheduleCampaignSchema),
+  async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const campaignId = Number(req.params.id);
+      if (!Number.isInteger(campaignId) || campaignId <= 0) throw new BadRequestError('INVALID_CAMPAIGN_ID');
+      await campaignService.scheduleCampaign(campaignId, req.user!.id, req.body.scheduled_at);
+      res.status(202).json({ data: { id: campaignId, status: 'scheduled' } });
     } catch (err) {
       next(err);
     }
