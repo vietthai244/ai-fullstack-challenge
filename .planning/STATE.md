@@ -2,14 +2,14 @@
 gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
-status: phase-complete
-stopped_at: Phase 2 complete (4/4 plans, all 5 ROADMAP SC verified live, gsd-verifier PASSED) — ready to plan Phase 3 (Authentication)
-last_updated: "2026-04-21T00:10:00Z"
-last_activity: 2026-04-21 -- Phase 2 closed (verifier PASS, 3 doc-lag observations resolved)
+status: ready-to-execute
+stopped_at: Phase 3 planned (4/4 plans, AUTH-01..07 covered, checker 0 blockers + 5 warnings + 7 info, warnings accepted) — ready to execute Phase 3 (Authentication)
+last_updated: "2026-04-21T07:58:00Z"
+last_activity: 2026-04-21 -- Phase 3 planned (RESEARCH + VALIDATION + PATTERNS + 4 PLANs committed; checker PASS with warnings-only)
 progress:
   total_phases: 10
   completed_phases: 2
-  total_plans: 8
+  total_plans: 12
   completed_plans: 8
   percent: 20
 ---
@@ -21,16 +21,16 @@ progress:
 See: .planning/PROJECT.md (updated 2026-04-20)
 
 **Core value:** Server-side business-rule correctness and clean, testable architecture — proven by tests and narrated through transparent AI collaboration.
-**Current focus:** Phase 2 closed — Phase 3 (Authentication) is unblocked
+**Current focus:** Phase 3 planned — ready to execute split-token JWT auth + Redis denylist
 
 ## Current Position
 
-Phase: 2 (Schema, Migrations & Seed) — COMPLETE (4/4 plans, all 5 ROADMAP SC verified live)
-Plan: 4 of 4 complete (next: Phase 3 — split-token JWT auth + Redis denylist)
-Status: Phase 2 closed — ready to plan Phase 3
-Last activity: 2026-04-21 -- Phase 2 closed (gsd-verifier PASS)
+Phase: 3 (Authentication) — PLANNED (0/4 plans executed, RESEARCH + VALIDATION + PATTERNS + 4 PLANs committed)
+Plan: next is 03-01 (Wave 1 scaffolding — docker-compose redis + env.ts + error primitives)
+Status: Phase 3 ready to execute (checker: 0 blockers, 5 warnings accepted as executor-friction polish)
+Last activity: 2026-04-21 -- Phase 3 planned (4 plans, AUTH-01..07 covered, depends_on chain 01→02→03→04)
 
-Progress: [██░░░░░░░░] 20%  (8/49 requirements done — Phase 1 FOUND-01/04/05 + Phase 2 DATA-01/02/03 = 6 REQ-IDs / 51 v1 reqs ≈ 12%; 8/40 plans across 10 phases ≈ 20%)
+Progress: [██░░░░░░░░] 20%  (6/51 v1 REQ-IDs done ≈ 12%; 8/12 plans committed [4 phase-1 done + 4 phase-2 done + 4 phase-3 planned] ≈ 67% planned coverage for current milestone)
 
 ## Performance Metrics
 
@@ -78,6 +78,11 @@ Recent structural decisions affecting current work:
 - Plan 02-03: Comment text containing literal `primaryKey: true` in 20260101000004-create-campaign-recipients.cjs tripped the strict grep count `=2` verify; rephrased the comment to describe behavior in paraphrase. Carry-forward of Plan 01-04's "describe forbidden behaviors in paraphrase, not verbatim" pattern — applies to BOTH grep-forbid and grep-count tripwires.
 - Plan 02-03: zsh GVM_ROOT init breaks subshells — sequelize CLI must be invoked via `/bin/bash --noprofile --norc -c "..."` with absolute path to hoisted `node_modules/.bin/sequelize` for direct calls; `yarn workspace @campaign/backend db:*` works fine via the corepack yarn 4 shim at /usr/local/bin/yarn.
 - Plan 02-03: backend/.env created from .env.example (gitignored — safe). Homebrew postgres 14 on host shadows the docker-compose postgres on localhost:5432; created `campaign` role + `campaigns` DB in homebrew postgres so DATABASE_URL works for local dev — docker container is preserved for Phase 10's `docker compose up` acceptance gate (clean volume).
+- Phase 3 planning: Refresh cookie `Path=/auth` (NOT `/auth/refresh` as in ARCHITECTURE.md §8) — deliberate deviation so `/auth/logout` can read the cookie to denylist its jti and `res.clearCookie` can match the same Path. DECISIONS.md entry drafted in Plan 03-04 Task 4. HttpOnly + SameSite=Strict remain primary defenses. Flagged as researcher Assumption A1.
+- Phase 3 planning: Redis added to docker-compose.yml as Wave 1 of Plan 03-01 (research flagged current compose is postgres-only). Separate IORedis client from Phase 5 BullMQ connection — auth Redis uses defaults, BullMQ connection gets `maxRetriesPerRequest: null` in Phase 5 (per C5).
+- Phase 3 planning: `buildApp()` factory split in `backend/src/app.ts` + `backend/src/index.ts` calls `buildApp().listen(PORT)` — enables Phase 7 Supertest to import the app without binding a port. Doing this now (Plan 03-04) is cheaper than retrofitting in Phase 7.
+- Phase 3 planning: Smoke harness `backend/test/smoke/*.sh` (curl-based per-REQ scripts + run-all.sh) — Phase 3 acceptance gate. Temporary; Phase 7 replaces with Vitest+Supertest (TEST-01..04). Structural grep + live curl chosen over Vitest in Phase 3 because Phase 7 formally owns the test harness.
+- Phase 3 planning: AUTH-07 cross-user = 404 (not 403) enforced at service layer via `findOne({ where: { id, createdBy: req.user.id } })` → null → `NotFoundError`. Stub campaigns/recipients routers in Plan 03-04 always return 404. Formal cross-user Supertest test lands in Phase 7 TEST-04. Convention propagates to Phase 4's full CRUD.
 
 ### Pending Todos
 
@@ -96,6 +101,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-04-20
-Stopped at: Plan 02-03 complete (DATA-02 schema half — 6 migrations, FK cascades, ENUMs, composite PK, tracking_token UUID, 5 indexes; round-trip gate PASS); next is Plan 02-04 (demo seed + DATA-03 + Phase 2 acceptance gate)
-Resume file: .planning/phases/02-schema-migrations-seed/02-04-demo-seed-PLAN.md (or /gsd-execute-phase 2 to continue Phase 2 wave)
+Last session: 2026-04-21
+Stopped at: Phase 3 planned (RESEARCH + VALIDATION + PATTERNS + 4 PLANs committed; plan-checker 0 blockers + 5 warnings accepted). Next is executing Plan 03-01 (Wave 1 scaffolding: docker-compose redis service + backend/.env keys + 4 new deps + config/env.ts fail-fast + lib/redis.ts + util/errors.ts HttpError family + middleware/{validate,errorHandler}.ts).
+Resume file: .planning/phases/03-authentication/03-01-PLAN.md (or /gsd-execute-phase 3 to run the full Phase 3 wave chain)
