@@ -22,7 +22,8 @@ Critical path: Phases 1 → 2 → 3 → 4 → 5 are strictly sequential (each un
 - [x] **Phase 7: Backend Tests** - Vitest + Supertest covering status-guard 409s, concurrent-send atomicity, stats aggregation, auth 401/cross-user 404 (completed 2026-04-21)
 - [x] **Phase 8: Frontend Foundation** - Vite + React 18 + Tailwind + shadcn + Redux + React Query + axios refresh interceptor + bootstrap + route guard (completed 2026-04-21)
 - [x] **Phase 9: Frontend Pages & Actions** - Login, campaigns list (infinite scroll), new-campaign form, detail page with polling + Schedule/Send/Delete/Logout actions + CampaignBadge test (completed 2026-04-22)
-- [ ] **Phase 10: Full Docker Stack, Integration & Docs** - Full `docker compose up` (postgres+redis+api+nginx-served web), README with demo login + "How I Used Claude Code", `docs/DECISIONS.md`
+- [x] **Phase 10: Full Docker Stack, Integration & Docs** - Full `docker compose up` (postgres+redis+api+nginx-served web), README with demo login + "How I Used Claude Code", `docs/DECISIONS.md`
+- [ ] **Phase 10.1: UAT Fixes — Auth, Navigation & Register** (INSERTED) - Login button loading bug, auth persistence on reload, auth guard redirect, page navigation, /register route with login↔register nav
 
 ## Phase Details
 
@@ -215,6 +216,25 @@ Context: Guards C13 (invalidate after every mutation; correct `refetchInterval` 
 
 ---
 
+### Phase 10.1: UAT Fixes — Auth, Navigation & Register (INSERTED)
+**Goal**: Fix UAT-discovered regressions and gaps: (1) login button stays in loading state on auth failure, (2) auth session not rehydrated after page reload (refresh 401 → blank page), (3) auth guard does not redirect to /login on unauthenticated state, (4) no navigation links between pages, (5) no /register route or login↔register navigation.
+**Depends on**: Phase 10
+**Requirements**: UI-02, UI-03, UI-04 (fix/complete)
+**Success Criteria** (what must be TRUE):
+  1. Login form resets to idle state and displays an error message when `/auth/login` returns 401 or any error — button is no longer stuck in "loading" forever
+  2. On page reload, `/auth/refresh` succeeds for a logged-in user and the UI renders the correct page with the user session intact; if refresh returns 401, user is redirected to `/login` (no blank page)
+  3. Navigating directly to any protected route while unauthenticated (no access token, no valid refresh cookie) redirects to `/login`
+  4. Navigation links are present so users can move between pages (e.g. campaign list → detail → back)
+  5. `/register` route exists with a working registration form; `/login` and `/register` pages each link to the other
+**Plans**: 3 plans
+
+Plans:
+- [ ] 10.1-01-interceptor-fix-PLAN.md — Fix 401 interceptor URL allowlist (Wave 1, UI-02/UI-03/UI-04)
+- [ ] 10.1-02-navbar-PLAN.md — NavBar component for protected routes (Wave 2, UI-03)
+- [ ] 10.1-03-register-and-wiring-PLAN.md — RegisterPage + App.tsx wiring + login/register cross-links (Wave 3, UI-02/UI-03/UI-04)
+
+---
+
 ### Phase 10: Full Docker Stack, Integration & Docs
 **Goal**: `docker compose up` from a fresh clone spins up postgres + redis + api (migrations auto-run) + nginx-served web on a single host port (`8080:80`), the reviewer opens `http://localhost:8080` and exercises the full app with no CORS and no baked-in `VITE_API_URL`, and the README + `docs/DECISIONS.md` + "How I Used Claude Code" deliverables are complete.
 **Depends on**: Phase 6, Phase 7, Phase 9
@@ -252,8 +272,9 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6 → 7 → 8 →
 | 7. Backend Tests | 0/2 | Planned | - |
 | 8. Frontend Foundation | 3/3 | Complete | 2026-04-21 |
 | 9. Frontend Pages & Actions | 5/5 | Complete | 2026-04-22 |
-| 10. Full Docker Stack, Integration & Docs | 0/4 | Not started | - |
+| 10. Full Docker Stack, Integration & Docs | 4/4 | Complete | 2026-04-22 |
+| 10.1. UAT Fixes — Auth, Navigation & Register (INSERTED) | 0/3 | Not started | - |
 
 ---
 *Roadmap created: 2026-04-20*
-*Last updated: 2026-04-22 — Phase 10 planned (4 plans, 3 waves)*
+*Last updated: 2026-04-22 — Phase 10.1 planned (3 plans, 3 waves)*
