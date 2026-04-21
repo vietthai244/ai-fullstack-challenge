@@ -541,17 +541,17 @@ If this table is essentially empty: A2 is verified by reading the model file dir
 
 ---
 
-## Open Questions
+## Open Questions (RESOLVED)
 
 1. **Queue name collisions in test**
    - What we know: Vitest backend tests (Phase 7) will need BullMQ. A worker running during tests could process jobs fired in one test that affect another.
    - What's unclear: Should Phase 5 add a `QUEUE_NAME` env var so tests use an isolated queue?
-   - Recommendation: Use `'send-campaign'` as the hardcoded queue name for now. Phase 7 research will handle test isolation (likely: don't start the worker in tests; directly call `processSendJob`).
+   - RESOLVED: Use `'send-campaign'` as the hardcoded queue name for now. Phase 7 research will handle test isolation (likely: don't start the worker in tests; directly call `processSendJob`).
 
 2. **`Op` import in campaignService.ts**
    - What we know: The existing file imports `QueryTypes` from `sequelize` but not `Op`.
    - What's unclear: Is `Op` already imported transitively?
-   - Recommendation: Add `Op` to the import from `'sequelize'` in campaignService.ts when adding `triggerSend`.
+   - RESOLVED: Add `Op` to the import from `'sequelize'` in campaignService.ts when adding `triggerSend`. Plan 05-02 Task 2 Step 1 covers this explicitly.
 
 ---
 
