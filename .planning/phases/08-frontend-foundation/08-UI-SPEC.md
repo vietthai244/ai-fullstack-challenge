@@ -61,10 +61,12 @@ bootstrap shell. Declaring now so Phase 9 inherits a consistent contract.
 
 | Role | Size | Weight | Line Height | Notes |
 |------|------|--------|-------------|-------|
-| Body | 14px | 400 | 1.5 | Default text, labels |
-| Label | 14px | 500 | 1.4 | Form labels, nav items |
+| Body | 14px | 400 | 1.5 | Default text, labels, form labels, nav items |
 | Heading | 20px | 600 | 1.2 | Page-level headings (Phase 9) |
-| Display | 28px | 700 | 1.1 | Auth page title (Phase 9 login) |
+| Display | 28px | 600 | 1.1 | Auth page title (Phase 9 login); size carries hierarchy |
+
+Two weights only: **400** (body/label) and **600** (heading/display).
+Size difference between Heading (20px) and Display (28px) provides hierarchy without a heavier weight.
 
 Source: shadcn New York defaults (sm = 14px base, matching `text-sm` Tailwind).
 
