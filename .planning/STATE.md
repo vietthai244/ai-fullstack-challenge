@@ -3,15 +3,15 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: executing
-stopped_at: Phase 10 planned (4 plans, 3 waves) — ready to execute. Wave 1 parallel (backend Dockerfile + frontend Dockerfile/nginx), Wave 2 (docker-compose.yml), Wave 3 (DECISIONS.md + README with user review gate).
+stopped_at: Phase 10.1 complete — all 3 plans executed; nginx proxy_cookie_path fix committed; project ships.
 last_updated: "2026-04-22T00:00:00Z"
-last_activity: 2026-04-22 -- Phase 10 planned (4 plans: backend-dockerfile / frontend-dockerfile-nginx / docker-compose / docs-readme; verification passed on first attempt)
+last_activity: 2026-04-22 -- Phase 10.1 complete (interceptor fix / NavBar / RegisterPage + nginx cookie path fix)
 progress:
-  total_phases: 10
-  completed_phases: 9
-  total_plans: 33
-  completed_plans: 29
-  percent: 90
+  total_phases: 11
+  completed_phases: 11
+  total_plans: 36
+  completed_plans: 36
+  percent: 100
 ---
 
 # Project State
@@ -57,6 +57,9 @@ Progress: [█████████░] 90%  (42/51 v1 REQ-IDs done ≈ 82%; 
 *Updated after each plan completion*
 
 ## Accumulated Context
+
+### Roadmap Evolution
+- Phase 10.1 inserted after Phase 10: UAT fixes — login button loading bug, auth persistence (refresh 401 blank page), auth guard redirect to /login, page navigation, /register route with login↔register nav (URGENT)
 
 ### Decisions
 

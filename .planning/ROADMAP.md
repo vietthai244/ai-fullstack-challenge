@@ -23,7 +23,7 @@ Critical path: Phases 1 → 2 → 3 → 4 → 5 are strictly sequential (each un
 - [x] **Phase 8: Frontend Foundation** - Vite + React 18 + Tailwind + shadcn + Redux + React Query + axios refresh interceptor + bootstrap + route guard (completed 2026-04-21)
 - [x] **Phase 9: Frontend Pages & Actions** - Login, campaigns list (infinite scroll), new-campaign form, detail page with polling + Schedule/Send/Delete/Logout actions + CampaignBadge test (completed 2026-04-22)
 - [x] **Phase 10: Full Docker Stack, Integration & Docs** - Full `docker compose up` (postgres+redis+api+nginx-served web), README with demo login + "How I Used Claude Code", `docs/DECISIONS.md`
-- [ ] **Phase 10.1: UAT Fixes — Auth, Navigation & Register** (INSERTED) - Login button loading bug, auth persistence on reload, auth guard redirect, page navigation, /register route with login↔register nav
+- [x] **Phase 10.1: UAT Fixes — Auth, Navigation & Register** (INSERTED) - Login button loading bug, auth persistence on reload, auth guard redirect, page navigation, /register route with login↔register nav (completed 2026-04-22)
 
 ## Phase Details
 
@@ -229,9 +229,9 @@ Context: Guards C13 (invalidate after every mutation; correct `refetchInterval` 
 **Plans**: 3 plans
 
 Plans:
-- [ ] 10.1-01-interceptor-fix-PLAN.md — Fix 401 interceptor URL allowlist (Wave 1, UI-02/UI-03/UI-04)
-- [ ] 10.1-02-navbar-PLAN.md — NavBar component for protected routes (Wave 2, UI-03)
-- [ ] 10.1-03-register-and-wiring-PLAN.md — RegisterPage + App.tsx wiring + login/register cross-links (Wave 3, UI-02/UI-03/UI-04)
+- [x] 10.1-01-interceptor-fix-PLAN.md — Fix 401 interceptor URL allowlist (Wave 1, UI-02/UI-03/UI-04)
+- [x] 10.1-02-navbar-PLAN.md — NavBar component for protected routes (Wave 2, UI-03)
+- [x] 10.1-03-register-and-wiring-PLAN.md — RegisterPage + App.tsx wiring + login/register cross-links (Wave 3, UI-02/UI-03/UI-04)
 
 ---
 
@@ -273,8 +273,8 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6 → 7 → 8 →
 | 8. Frontend Foundation | 3/3 | Complete | 2026-04-21 |
 | 9. Frontend Pages & Actions | 5/5 | Complete | 2026-04-22 |
 | 10. Full Docker Stack, Integration & Docs | 4/4 | Complete | 2026-04-22 |
-| 10.1. UAT Fixes — Auth, Navigation & Register (INSERTED) | 0/3 | Not started | - |
+| 10.1. UAT Fixes — Auth, Navigation & Register (INSERTED) | 3/3 | Complete | 2026-04-22 |
 
 ---
 *Roadmap created: 2026-04-20*
-*Last updated: 2026-04-22 — Phase 10.1 planned (3 plans, 3 waves)*
+*Last updated: 2026-04-22 — Phase 10.1 complete (3/3 plans; nginx cookie path fix + NavBar + RegisterPage)*
