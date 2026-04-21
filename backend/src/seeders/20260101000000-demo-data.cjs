@@ -60,7 +60,7 @@ module.exports = {
       ['jack@example.com',   'Jack Jensen'],
     ];
     await queryInterface.bulkInsert('recipients', recipientNames.map(([email, name]) => ({
-      email, name, created_at: now, updated_at: now,
+      email, name, user_id: demoUserId, created_at: now, updated_at: now,
     })));
     const [recipientRows] = await queryInterface.sequelize.query(
       `SELECT id, email FROM recipients WHERE email IN (${recipientNames.map(([e]) => `'${e}'`).join(',')}) ORDER BY id;`,

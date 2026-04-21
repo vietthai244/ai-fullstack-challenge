@@ -39,7 +39,7 @@ After running `docker compose exec api yarn db:seed`:
 | Field    | Value              |
 |----------|--------------------|
 | Email    | demo@example.com   |
-| Password | password123        |
+| Password | demo1234           |
 
 The seed creates 1 user, 10 recipients, and 3 campaigns (draft / scheduled / sent).
 
