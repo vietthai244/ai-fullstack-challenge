@@ -31,7 +31,8 @@ function EmailTokenizer({
     const emails = raw
       .split(/[,\s]+/)
       .map((e) => e.trim())
-      .filter(Boolean);
+      .filter(Boolean)
+      .filter((e) => !value.includes(e)); // WR-03: deduplicate against existing values
     if (emails.length > 0) {
       onChange([...value, ...emails]);
       setInputValue('');
@@ -40,16 +41,18 @@ function EmailTokenizer({
 
   return (
     <div className="flex flex-wrap gap-1 rounded-md border p-2 min-h-[2.5rem]">
-      {value.map((email) => (
+      {/* WR-03: use index in key to avoid collision if duplicates somehow exist;
+          remove by index so only the targeted chip is removed */}
+      {value.map((email, i) => (
         <span
-          key={email}
+          key={`${email}-${i}`}
           className="flex items-center gap-1 rounded-full bg-secondary px-2 py-1 text-sm"
         >
           {email}
           <button
             type="button"
             className="text-muted-foreground hover:text-foreground leading-none"
-            onClick={() => onChange(value.filter((e) => e !== email))}
+            onClick={() => onChange(value.filter((_, idx) => idx !== i))}
             aria-label={`Remove ${email}`}
           >
             ×
