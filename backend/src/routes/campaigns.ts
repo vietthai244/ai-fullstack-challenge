@@ -118,6 +118,7 @@ campaignsRouter.post(
       const campaignId = Number(req.params.id);
       if (!Number.isInteger(campaignId) || campaignId <= 0) throw new BadRequestError('INVALID_CAMPAIGN_ID');
       await campaignService.triggerSend(campaignId, req.user!.id);
+      await new Promise((r) => setTimeout(r, 500 + Math.random() * 1500));
       res.status(202).json({ data: { id: campaignId, status: 'sending' } });
     } catch (err) {
       next(err);

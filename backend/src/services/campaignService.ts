@@ -221,8 +221,9 @@ export async function deleteCampaign(campaignId: number, userId: number): Promis
     });
     if (!campaign) throw new NotFoundError('CAMPAIGN_NOT_FOUND');
 
+    // status:'draft' (not updatedAt) — Sequelize strips updatedAt from SET when timestamps:true
     const [count] = await Campaign.update(
-      { updatedAt: new Date() },
+      { status: 'draft' as const },
       { where: { id: campaignId, createdBy: userId, status: 'draft' }, transaction: t },
     );
     if (count === 0) throw new ConflictError('CAMPAIGN_NOT_EDITABLE');

@@ -31,9 +31,11 @@ export async function processSendJob(job: Job<SendJobData>): Promise<void> {
   // campaign is no longer in 'sending' state (e.g. a second concurrent job already
   // processed it), guardCount === 0 and we bail cleanly without marking job failed.
   await sequelize.transaction(async (t) => {
-    // Atomic guard: only proceed if campaign is still owned by userId and in 'sending'
+    // Atomic guard: only proceed if campaign is still owned by userId and in 'sending'.
+    // Use status:'sending' (not updatedAt) — Sequelize timestamps:true strips updatedAt
+    // from the SET clause when it manages the field, yielding an empty SET → count=0.
     const [guardCount] = await Campaign.update(
-      { updatedAt: new Date() },
+      { status: 'sending' as const },
       {
         where: { id: campaignId, createdBy: userId, status: 'sending' },
         transaction: t,

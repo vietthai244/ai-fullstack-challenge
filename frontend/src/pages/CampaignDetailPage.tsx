@@ -12,6 +12,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useParams, useNavigate, Navigate } from 'react-router-dom';
 import { toast } from 'sonner';
 import { api } from '@/lib/apiClient';
+import { EmailTokenizer } from '@/components/EmailTokenizer';
 import { CampaignBadge } from '@/components/CampaignBadge';
 import { Progress } from '@/components/ui/progress';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -90,6 +91,8 @@ export function CampaignDetailPage(): React.ReactElement {
   // before mutation completes (CR-01 fix)
   const [sendDialogOpen, setSendDialogOpen] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [editingRecipients, setEditingRecipients] = useState(false);
+  const [recipientDraft, setRecipientDraft] = useState<string[]>([]);
 
   // CRITICAL: v5 refetchInterval receives Query object — NOT data.
   // Using (data) => data?.status would silently return undefined → no polling.
@@ -113,6 +116,7 @@ export function CampaignDetailPage(): React.ReactElement {
         scheduled_at: new Date(localDateString).toISOString(),
       }),
     onSuccess: async () => {
+      toast.success('Campaign scheduled');
       setScheduleInput('');
       await Promise.all([
         queryClient.invalidateQueries({ queryKey: ['campaigns'] }),
@@ -131,6 +135,7 @@ export function CampaignDetailPage(): React.ReactElement {
   const sendMutation = useMutation({
     mutationFn: () => api.post(`/campaigns/${id}/send`),
     onSuccess: async () => {
+      toast.success('Campaign sending — processing recipients');
       setSendDialogOpen(false);
       await Promise.all([
         queryClient.invalidateQueries({ queryKey: ['campaigns'] }),
@@ -149,11 +154,29 @@ export function CampaignDetailPage(): React.ReactElement {
     mutationFn: () => api.delete(`/campaigns/${id}`),
     onSuccess: async () => {
       setDeleteDialogOpen(false);
+      toast.success('Campaign deleted');
       await queryClient.invalidateQueries({ queryKey: ['campaigns'] });
       navigate('/campaigns');
     },
     onError: (error) => {
       const message = error instanceof Error ? error.message : 'Failed to delete campaign';
+      toast.error(message);
+    },
+  });
+
+  const updateRecipientsMutation = useMutation({
+    mutationFn: (emails: string[]) =>
+      api.patch(`/campaigns/${id}`, { recipientEmails: emails }),
+    onSuccess: async () => {
+      setEditingRecipients(false);
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: ['campaigns'] }),
+        queryClient.invalidateQueries({ queryKey: ['campaign', id] }),
+      ]);
+      toast.success('Recipients updated');
+    },
+    onError: (error) => {
+      const message = error instanceof Error ? error.message : 'Failed to update recipients';
       toast.error(message);
     },
   });
@@ -228,6 +251,16 @@ export function CampaignDetailPage(): React.ReactElement {
       </div>
 
       <Separator />
+
+      {/* Scheduled time — shown when campaign is scheduled */}
+      {campaign.status === 'scheduled' && campaign.scheduledAt && (
+        <p className="text-sm text-muted-foreground">
+          Scheduled for{' '}
+          <span className="font-medium text-foreground">
+            {new Date(campaign.scheduledAt).toLocaleString()}
+          </span>
+        </p>
+      )}
 
       {/* Actions section — conditional by status (exhaustive: all 4 handled) */}
       {campaign.status === 'sending' && (
@@ -352,20 +385,60 @@ export function CampaignDetailPage(): React.ReactElement {
 
       {/* Recipients list */}
       <div className="space-y-2">
-        <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">
-          Recipients ({campaign.stats.total})
-        </h2>
-        {campaign.campaignRecipients.map((cr) => (
-          <div key={cr.trackingToken} className="flex items-center justify-between text-sm py-1">
-            <span>{cr.recipient.email}</span>
-            <span className={recipientStatusClass(cr.status)}>
-              {cr.status}
-              {cr.sentAt ? ` · ${new Date(cr.sentAt).toLocaleDateString()}` : ''}
-            </span>
+        <div className="flex items-center justify-between">
+          <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">
+            Recipients ({campaign.stats.total})
+          </h2>
+          {campaign.status === 'draft' && !editingRecipients && (
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => {
+                setRecipientDraft(campaign.campaignRecipients.map((cr) => cr.recipient.email));
+                setEditingRecipients(true);
+              }}
+            >
+              Edit recipients
+            </Button>
+          )}
+        </div>
+
+        {editingRecipients ? (
+          <div className="space-y-2">
+            <EmailTokenizer value={recipientDraft} onChange={setRecipientDraft} />
+            <div className="flex gap-2">
+              <Button
+                size="sm"
+                disabled={updateRecipientsMutation.isPending}
+                onClick={() => updateRecipientsMutation.mutate(recipientDraft)}
+              >
+                {updateRecipientsMutation.isPending ? 'Saving...' : 'Save'}
+              </Button>
+              <Button
+                size="sm"
+                variant="ghost"
+                disabled={updateRecipientsMutation.isPending}
+                onClick={() => setEditingRecipients(false)}
+              >
+                Cancel
+              </Button>
+            </div>
           </div>
-        ))}
-        {campaign.campaignRecipients.length === 0 && (
-          <p className="text-sm text-muted-foreground">No recipients.</p>
+        ) : (
+          <>
+            {campaign.campaignRecipients.map((cr) => (
+              <div key={cr.trackingToken} className="flex items-center justify-between text-sm py-1">
+                <span>{cr.recipient.email}</span>
+                <span className={recipientStatusClass(cr.status)}>
+                  {cr.status}
+                  {cr.sentAt ? ` · ${new Date(cr.sentAt).toLocaleDateString()}` : ''}
+                </span>
+              </div>
+            ))}
+            {campaign.campaignRecipients.length === 0 && (
+              <p className="text-sm text-muted-foreground">No recipients.</p>
+            )}
+          </>
         )}
       </div>
     </div>

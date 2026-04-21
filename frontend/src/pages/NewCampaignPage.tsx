@@ -4,79 +4,19 @@
 // Zod-validated via react-hook-form + @hookform/resolvers/zod.
 // EmailTokenizer uses comma/Enter key to convert typed text to email chip tokens.
 // On success: invalidates ['campaigns'] query + navigates to /campaigns/:id.
-import React, { useState } from 'react';
+import React from 'react';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
+import { toast } from 'sonner';
 import { api } from '@/lib/apiClient';
+import { EmailTokenizer } from '@/components/EmailTokenizer';
 import { CreateCampaignSchema, type CreateCampaignInput } from '@campaign/shared';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
-
-// EmailTokenizer: comma or Enter converts typed text to chip token.
-// Inline component — not extracted to separate file (UI-SPEC: can be inline or extracted).
-function EmailTokenizer({
-  value,
-  onChange,
-}: {
-  value: string[];
-  onChange: (emails: string[]) => void;
-}): React.ReactElement {
-  const [inputValue, setInputValue] = useState('');
-
-  const addEmail = (raw: string) => {
-    const emails = raw
-      .split(/[,\s]+/)
-      .map((e) => e.trim())
-      .filter(Boolean)
-      .filter((e) => !value.includes(e)); // WR-03: deduplicate against existing values
-    if (emails.length > 0) {
-      onChange([...value, ...emails]);
-      setInputValue('');
-    }
-  };
-
-  return (
-    <div className="flex flex-wrap gap-1 rounded-md border p-2 min-h-[2.5rem]">
-      {/* WR-03: use index in key to avoid collision if duplicates somehow exist;
-          remove by index so only the targeted chip is removed */}
-      {value.map((email, i) => (
-        <span
-          key={`${email}-${i}`}
-          className="flex items-center gap-1 rounded-full bg-secondary px-2 py-1 text-sm"
-        >
-          {email}
-          <button
-            type="button"
-            className="text-muted-foreground hover:text-foreground leading-none"
-            onClick={() => onChange(value.filter((_, idx) => idx !== i))}
-            aria-label={`Remove ${email}`}
-          >
-            ×
-          </button>
-        </span>
-      ))}
-      <input
-        value={inputValue}
-        onChange={(e) => setInputValue(e.target.value)}
-        onKeyDown={(e) => {
-          if (e.key === 'Enter' || e.key === ',') {
-            e.preventDefault();
-            addEmail(inputValue);
-          }
-        }}
-        onBlur={() => {
-          if (inputValue) addEmail(inputValue);
-        }}
-        placeholder={value.length === 0 ? 'Add email addresses...' : ''}
-        className="flex-1 outline-none bg-transparent text-sm min-w-[8rem]"
-      />
-    </div>
-  );
-}
 
 export function NewCampaignPage(): React.ReactElement {
   const navigate = useNavigate();
@@ -96,6 +36,7 @@ export function NewCampaignPage(): React.ReactElement {
     mutationFn: (data: CreateCampaignInput) =>
       api.post<{ data: { id: string } }>('/campaigns', data),
     onSuccess: async (res) => {
+      toast.success('Campaign created');
       // Invalidate list cache — new campaign should appear on next list fetch.
       await queryClient.invalidateQueries({ queryKey: ['campaigns'] });
       navigate(`/campaigns/${res.data.data.id}`);
