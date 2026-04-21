@@ -53,6 +53,6 @@ code=$(curl -sS -o /tmp/smoke-recip02-badcursor.json -w '%{http_code}' \
   "$BASE/recipients?cursor=badbase64!!!" \
   -H "Authorization: Bearer $ACCESS_TOKEN")
 test "$code" = "400" || { echo "FAIL recip-02 bad cursor: got $code (expected 400)"; cat /tmp/smoke-recip02-badcursor.json; exit 1; }
-jq -e '.error.code == "VALIDATION_ERROR"' /tmp/smoke-recip02-badcursor.json >/dev/null
+jq -e '.error.code == "INVALID_CURSOR"' /tmp/smoke-recip02-badcursor.json >/dev/null
 
 echo "PASS: RECIP-02"
