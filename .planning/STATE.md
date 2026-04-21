@@ -3,9 +3,9 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: executing
-stopped_at: Phase 4 Plan 03 complete — routes/campaigns.ts + routes/recipients.ts + DECISIONS.md. Ready for Plan 04-04 (smoke scripts acceptance gate).
-last_updated: "2026-04-21T11:01:42Z"
-last_activity: 2026-04-21 -- Phase 4 Plan 03 executed: campaigns.ts (6 handlers, offset pagination) + recipients.ts (2 handlers, cursor pagination) + DECISIONS.md (2 sections appended) (2 tasks, 2 commits: f305d3a, d583fe0)
+stopped_at: Phase 4 Plan 04 complete — 8 smoke scripts + run-all-phase4.sh + run-all.sh updated. Phase 4 COMPLETE (4/4 plans). Ready for Phase 5.
+last_updated: "2026-04-21T11:05:21Z"
+last_activity: 2026-04-21 -- Phase 4 Plan 04 executed: 8 smoke scripts (CAMP-01..05, CAMP-08, RECIP-01..02) + run-all-phase4.sh orchestrator + run-all.sh updated (2 tasks, 2 commits: d92e8af, fed4688)
 progress:
   total_phases: 10
   completed_phases: 3
@@ -26,12 +26,12 @@ See: .planning/PROJECT.md (updated 2026-04-20)
 ## Current Position
 
 Phase: 3 (Authentication) — COMPLETE (4/4 plans executed)
-Phase: 4 (Campaigns & Recipients CRUD) — IN PROGRESS (3/4 plans executed)
-Plan: 04-04 (smoke scripts acceptance gate) — NEXT
-Status: Plan 04-03 complete (2 tasks, 2 commits: f305d3a, d583fe0)
-Last activity: 2026-04-21 -- Plan 04-03 executed (campaigns.ts 6 handlers + recipients.ts 2 handlers + DECISIONS.md appended)
+Phase: 4 (Campaigns & Recipients CRUD) — COMPLETE (4/4 plans executed)
+Plan: 05-01 (BullMQ send worker) — NEXT
+Status: Plan 04-04 complete (2 tasks, 2 commits: d92e8af, fed4688)
+Last activity: 2026-04-21 -- Plan 04-04 executed (8 smoke scripts + run-all-phase4.sh + run-all.sh updated)
 
-Progress: [███░░░░░░░] 33%  (13/51 v1 REQ-IDs done ≈ 25%; 15/16 plans committed [4 phase-1 + 4 phase-2 + 4/4 phase-3 + 3/4 phase-4])
+Progress: [████░░░░░░] 40%  (21/51 v1 REQ-IDs done ≈ 41%; 16/16 plans committed [4 phase-1 + 4 phase-2 + 4/4 phase-3 + 4/4 phase-4])
 
 ## Performance Metrics
 
@@ -125,5 +125,5 @@ None yet.
 ## Session Continuity
 
 Last session: 2026-04-21
-Stopped at: Phase 4 Plan 03 complete — campaigns.ts + recipients.ts routes + DECISIONS.md. Ready for 04-04 (smoke acceptance gate).
-Resume file: .planning/phases/04-campaigns-recipients-crud/04-04-PLAN.md
+Stopped at: Phase 4 complete (4/4 plans). 8 smoke scripts + orchestrators committed. Ready for Phase 5 (BullMQ send worker).
+Resume file: .planning/phases/05-send-worker/
