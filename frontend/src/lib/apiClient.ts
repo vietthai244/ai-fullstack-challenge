@@ -46,6 +46,13 @@ api.interceptors.response.use(
     }
     originalRequest._retry = true;
 
+    // Skip retry for auth endpoints — let their 401s propagate to React Query (D-01).
+    // Without this guard: /auth/login 401 → interceptor tries refresh → refresh fails
+    // → hard redirect, loginMutation.isError never fires (bug 1).
+    if (originalRequest.url?.includes('/auth/')) {
+      return Promise.reject(error);
+    }
+
     try {
       // Create a single shared refresh promise if one is not already in-flight.
       // All concurrent 401s await the SAME promise — exactly 1 network call.
