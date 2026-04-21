@@ -10,8 +10,9 @@
 // 5. campaign.body rendered as plain text only — never dangerouslySetInnerHTML (XSS guard T-09-05-01)
 import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, Navigate } from 'react-router-dom';
 import { useDispatch } from 'react-redux';
+import { toast } from 'sonner';
 import { api } from '@/lib/apiClient';
 import { clearAuth } from '@/store/authSlice';
 import type { AppDispatch } from '@/store/index';
@@ -90,6 +91,11 @@ export function CampaignDetailPage(): React.ReactElement {
   // Schedule action local state for the datetime-local input value
   const [scheduleInput, setScheduleInput] = useState('');
 
+  // Controlled dialog open state — prevents AlertDialogAction from auto-closing
+  // before mutation completes (CR-01 fix)
+  const [sendDialogOpen, setSendDialogOpen] = useState(false);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+
   // CRITICAL: v5 refetchInterval receives Query object — NOT data.
   // Using (data) => data?.status would silently return undefined → no polling.
   const { data: campaign, isPending } = useQuery<CampaignDetail>({
@@ -118,25 +124,42 @@ export function CampaignDetailPage(): React.ReactElement {
         queryClient.invalidateQueries({ queryKey: ['campaign', id] }),
       ]);
     },
+    onError: (error) => {
+      const message = error instanceof Error ? error.message : 'Failed to schedule campaign';
+      toast.error(message);
+    },
   });
 
-  // Send mutation — backend atomic guard returns 409 if status not draft|scheduled
+  // Send mutation — backend atomic guard returns 409 if status not draft|scheduled.
+  // CR-01 fix: close dialog only on success (setSendDialogOpen(false) here, not via
+  // AlertDialogAction default behaviour which closes before the mutation fires).
   const sendMutation = useMutation({
     mutationFn: () => api.post(`/campaigns/${id}/send`),
     onSuccess: async () => {
+      setSendDialogOpen(false);
       await Promise.all([
         queryClient.invalidateQueries({ queryKey: ['campaigns'] }),
         queryClient.invalidateQueries({ queryKey: ['campaign', id] }),
       ]);
     },
+    onError: (error) => {
+      const message = error instanceof Error ? error.message : 'Failed to send campaign';
+      toast.error(message);
+    },
   });
 
-  // Delete mutation — navigates away on success; only invalidate list (detail gone)
+  // Delete mutation — navigates away on success; only invalidate list (detail gone).
+  // CR-01 fix: close dialog only on success.
   const deleteMutation = useMutation({
     mutationFn: () => api.delete(`/campaigns/${id}`),
     onSuccess: async () => {
+      setDeleteDialogOpen(false);
       await queryClient.invalidateQueries({ queryKey: ['campaigns'] });
       navigate('/campaigns');
+    },
+    onError: (error) => {
+      const message = error instanceof Error ? error.message : 'Failed to delete campaign';
+      toast.error(message);
     },
   });
 
@@ -151,12 +174,16 @@ export function CampaignDetailPage(): React.ReactElement {
     },
   });
 
+  // WR-04: guard missing id param before query can fire with undefined
+  if (!id) return <Navigate to="/campaigns" replace />;
+
   if (isPending) return <DetailSkeleton />;
   if (!campaign) return <p className="max-w-3xl mx-auto px-4 py-8">Campaign not found.</p>;
 
   const canSchedule = campaign.status === 'draft';
   const canSend = campaign.status === 'draft' || campaign.status === 'scheduled';
-  const canDelete = campaign.status === 'draft' || campaign.status === 'scheduled';
+  // WR-02: backend DELETE guard only permits draft — align frontend to match
+  const canDelete = campaign.status === 'draft';
 
   // Minimum datetime for schedule input — current moment (prevent past schedule in UI)
   const minDatetime = new Date().toISOString().slice(0, 16);
@@ -257,12 +284,15 @@ export function CampaignDetailPage(): React.ReactElement {
               </div>
             )}
 
-            {/* Send action — AlertDialog confirm */}
+            {/* Send action — AlertDialog confirm.
+                CR-01 fix: controlled open state so the dialog stays open while mutation
+                is in-flight. e.preventDefault() stops Radix auto-close on action click;
+                dialog closes only in sendMutation.onSuccess. */}
             {canSend && (
-              <AlertDialog>
+              <AlertDialog open={sendDialogOpen} onOpenChange={setSendDialogOpen}>
                 <AlertDialogTrigger asChild>
                   <Button variant="default" disabled={sendMutation.isPending}>
-                    {sendMutation.isPending ? 'Sending...' : 'Send Now'}
+                    Send Now
                   </Button>
                 </AlertDialogTrigger>
                 <AlertDialogContent>
@@ -274,9 +304,12 @@ export function CampaignDetailPage(): React.ReactElement {
                     </AlertDialogDescription>
                   </AlertDialogHeader>
                   <AlertDialogFooter>
-                    <AlertDialogCancel>Cancel</AlertDialogCancel>
+                    <AlertDialogCancel disabled={sendMutation.isPending}>Cancel</AlertDialogCancel>
                     <AlertDialogAction
-                      onClick={() => sendMutation.mutate()}
+                      onClick={(e) => {
+                        e.preventDefault(); // prevent Radix auto-close before mutation completes
+                        sendMutation.mutate();
+                      }}
                       disabled={sendMutation.isPending}
                     >
                       {sendMutation.isPending ? 'Sending...' : 'Send'}
@@ -286,12 +319,13 @@ export function CampaignDetailPage(): React.ReactElement {
               </AlertDialog>
             )}
 
-            {/* Delete action — AlertDialog confirm with destructive variant */}
+            {/* Delete action — AlertDialog confirm with destructive variant.
+                CR-01 fix: same controlled pattern as Send dialog above. */}
             {canDelete && (
-              <AlertDialog>
+              <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
                 <AlertDialogTrigger asChild>
                   <Button variant="outline" disabled={deleteMutation.isPending}>
-                    {deleteMutation.isPending ? 'Deleting...' : 'Delete Campaign'}
+                    Delete Campaign
                   </Button>
                 </AlertDialogTrigger>
                 <AlertDialogContent>
@@ -303,9 +337,12 @@ export function CampaignDetailPage(): React.ReactElement {
                     </AlertDialogDescription>
                   </AlertDialogHeader>
                   <AlertDialogFooter>
-                    <AlertDialogCancel>Cancel</AlertDialogCancel>
+                    <AlertDialogCancel disabled={deleteMutation.isPending}>Cancel</AlertDialogCancel>
                     <AlertDialogAction
-                      onClick={() => deleteMutation.mutate()}
+                      onClick={(e) => {
+                        e.preventDefault(); // prevent Radix auto-close before mutation completes
+                        deleteMutation.mutate();
+                      }}
                       disabled={deleteMutation.isPending}
                       className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
                     >
