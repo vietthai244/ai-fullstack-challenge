@@ -956,17 +956,19 @@ Note: `stats.send_rate` and `stats.open_rate` are `number | null` (from `StatsSc
 
 ---
 
-## Open Questions
+## Open Questions (RESOLVED)
 
 1. **Should the campaign list use `useInfiniteQuery` or regular `useQuery` with a Load More button?**
    - What we know: REQUIREMENTS.md says "cursor pagination via React Query `useInfiniteQuery`"; backend uses offset; `useInfiniteQuery` with page numbers works fine.
    - What's unclear: Whether "infinite scroll" (IO sentinel) or "Load More button" is preferred UX for this app.
    - Recommendation: Use `useInfiniteQuery` + IntersectionObserver sentinel (auto-load) as the ROADMAP Phase 9 success criteria describes. Either pattern works with `useInfiniteQuery`.
+   - **RESOLVED:** `useInfiniteQuery` + IntersectionObserver sentinel. Plan 09-03 implements `initialPageParam: 1`, `getNextPageParam` reads `pagination.page < pagination.totalPages`.
 
 2. **`stats.send_rate` precision — decimal or percentage?**
    - What we know: `StatsSchema` defines `send_rate: z.number().nullable()`. Backend SQL uses `ROUND(sent::numeric / NULLIF(total, 0), 2)`.
    - What's unclear: The ROUND result is a decimal (0.67 for 67%). The Progress component expects 0–100.
    - Recommendation: Multiply by 100 in the UI: `<Progress value={(stats.send_rate ?? 0) * 100} />`. Verified from SQL in `computeCampaignStats`.
+   - **RESOLVED:** Decimal (0.0–1.0) from backend. Multiply by 100 before Progress value. Plan 09-05 implements `value={(detail.stats.send_rate ?? 0) * 100}`.
 
 ---
 
