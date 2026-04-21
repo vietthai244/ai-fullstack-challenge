@@ -100,7 +100,7 @@ Context: Guards C6 (refresh-race + missing `withCredentials` + no-rotation + no-
 
 Plans:
 - [x] 04-01-PLAN.md — Migration (add user_id FK to recipients + backfill + constraint swap) + Recipient model update + shared Zod schemas (D-26) + db:migrate [BLOCKING] (Wave 1, CAMP-01..05, CAMP-08, RECIP-01, RECIP-02 foundation)
-- [ ] 04-02-PLAN.md — campaignService.ts (offset list, create, detail, update, delete, computeCampaignStats) + recipientService.ts (upsert, cursor list) (Wave 2, all 8 requirements)
+- [x] 04-02-PLAN.md — campaignService.ts (offset list, create, detail, update, delete, computeCampaignStats) + recipientService.ts (upsert, cursor list) (Wave 2, all 8 requirements)
 - [ ] 04-03-PLAN.md — routes/campaigns.ts (replace stub, 6 handlers) + routes/recipients.ts (replace stub, 2 handlers) + docs/DECISIONS.md append (Wave 3, all 8 requirements)
 - [ ] 04-04-PLAN.md — 8 smoke scripts + run-all-phase4.sh + update run-all.sh (Wave 4, phase acceptance gate)
 

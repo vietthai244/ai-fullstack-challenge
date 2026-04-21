@@ -3,15 +3,15 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: executing
-stopped_at: Phase 4 Plan 01 complete — migration + Recipient model userId + D-26 Zod schemas. Ready for Plan 04-02 (campaignService + recipientService).
-last_updated: "2026-04-21T12:00:00Z"
-last_activity: 2026-04-21 -- Phase 4 Plan 01 executed: user_id FK migration, Recipient model, shared Zod schemas (2 tasks, 2 commits: 056fb77, 7a9513a)
+stopped_at: Phase 4 Plan 02 complete — campaignService.ts + recipientService.ts. Ready for Plan 04-03 (campaign + recipient routes).
+last_updated: "2026-04-21T10:57:14Z"
+last_activity: 2026-04-21 -- Phase 4 Plan 02 executed: campaignService (6 exports, offset pagination, stats SQL, atomic guards) + recipientService (upsertRecipient COALESCE, cursor pagination) (2 tasks, 2 commits: 0d6c6c2, 2376cf1)
 progress:
   total_phases: 10
   completed_phases: 3
-  total_plans: 12
-  completed_plans: 12
-  percent: 30
+  total_plans: 14
+  completed_plans: 14
+  percent: 32
 ---
 
 # Project State
@@ -26,12 +26,12 @@ See: .planning/PROJECT.md (updated 2026-04-20)
 ## Current Position
 
 Phase: 3 (Authentication) — COMPLETE (4/4 plans executed)
-Phase: 4 (Campaigns & Recipients CRUD) — IN PROGRESS (1/4 plans executed)
-Plan: 04-02 (campaignService + recipientService) — NEXT
-Status: Plan 04-01 complete (2 tasks, 2 commits: 056fb77, 7a9513a)
-Last activity: 2026-04-21 -- Plan 04-01 executed (user_id FK migration + Recipient model userId + D-26 Zod schemas)
+Phase: 4 (Campaigns & Recipients CRUD) — IN PROGRESS (2/4 plans executed)
+Plan: 04-03 (campaign + recipient routes) — NEXT
+Status: Plan 04-02 complete (2 tasks, 2 commits: 0d6c6c2, 2376cf1)
+Last activity: 2026-04-21 -- Plan 04-02 executed (campaignService 6 exports + recipientService cursor pagination)
 
-Progress: [███░░░░░░░] 30%  (13/51 v1 REQ-IDs done ≈ 25%; 13/16 plans committed [4 phase-1 + 2 phase-2 + 4/4 phase-3 + 1/4 phase-4])
+Progress: [███░░░░░░░] 32%  (13/51 v1 REQ-IDs done ≈ 25%; 14/16 plans committed [4 phase-1 + 2 phase-2 + 4/4 phase-3 + 2/4 phase-4])
 
 ## Performance Metrics
 
@@ -100,6 +100,10 @@ Recent structural decisions affecting current work:
 - Plan 04-01: Migration adds user_id nullable first, backfills to MIN(users.id), then enforces NOT NULL — standard nullable-add-then-backfill-then-constraint pattern for adding FK to populated table
 - Plan 04-01: inline unique:true removed from Recipient.email column definition — composite UNIQUE(user_id, email) enforced by DB constraint only; Sequelize inline unique would create a conflicting separate constraint
 - Plan 04-01: shared/dist is gitignored — dist rebuild verified locally but not committed; consumers run build at install time
+- Plan 04-02: campaignService listCampaigns uses findAndCountAll offset pagination (D-16..D-21) — NOT cursor; campaigns use page-number UI per user override of CLAUDE.md §5
+- Plan 04-02: deleteCampaign wraps findOne + Campaign.update guard + Campaign.destroy in single sequelize.transaction() — prevents TOCTOU race between ownership check and destroy (C11)
+- Plan 04-02: computeCampaignStats opts.transaction passed via spread `...(opts.transaction ? { transaction: opts.transaction } : {})` — Sequelize exactOptionalPropertyTypes requires Transaction | null, not Transaction | undefined
+- Plan 04-02: cursor array access `data[data.length - 1]` extracted to `const lastItem` with null guard — exactOptionalPropertyTypes flags array index returns as T | undefined requiring explicit narrowing
 
 ### Pending Todos
 
@@ -119,5 +123,5 @@ None yet.
 ## Session Continuity
 
 Last session: 2026-04-21
-Stopped at: Phase 3 CLOSED — 4/4 plans complete. All 7 AUTH-NN requirements satisfied. buildApp() factory, authenticate middleware, stub routers, smoke harness, DECISIONS.md all shipped.
-Resume file: Phase 4 plan files (run /gsd-plan-phase 4 or /gsd-execute-phase 4)
+Stopped at: Phase 4 Plan 02 complete — campaignService + recipientService service layer. Ready for 04-03 (routes).
+Resume file: .planning/phases/04-campaigns-recipients-crud/04-03-PLAN.md
