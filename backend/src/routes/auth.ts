@@ -143,7 +143,13 @@ authRouter.post(
 
       // 4. Re-verify user still exists (handles edge case where account was
       //    deleted between login and refresh — T-03-13).
-      const user = await User.findByPk(decoded.sub);
+      //    Cast sub to number — JWT sub is always a string; findByPk with a
+      //    string relies on implicit DB coercion (not guaranteed).
+      const userId = Number(decoded.sub);
+      if (!Number.isFinite(userId) || userId <= 0) {
+        throw new UnauthorizedError('INVALID_TOKEN_SUB');
+      }
+      const user = await User.findByPk(userId);
       if (!user) {
         throw new UnauthorizedError('USER_NOT_FOUND');
       }
@@ -170,26 +176,30 @@ authRouter.post(
     try {
       const rt = req.cookies?.rt as string | undefined;
       if (rt) {
-        // Decode WITHOUT verify — we want to denylist the claimed jti even
-        // if the token is expired or malformed (worst case: we write an
-        // entry for a jti that was never issued — harmless, cleans itself
-        // up via TTL).
-        const decoded = jwt.decode(rt) as
-          | { jti?: string; exp?: number }
-          | null;
-        if (decoded?.jti && decoded.exp) {
-          const secondsRemaining = Math.max(
-            0,
-            decoded.exp - Math.floor(Date.now() / 1000),
-          );
-          if (secondsRemaining > 0) {
-            await redis.set(
-              `jwt:denylist:${decoded.jti}`,
-              '1',
-              'EX',
-              secondsRemaining,
+        try {
+          // Verify signature (ignoreExpiration: true so expired-but-valid
+          // tokens are still denylisted). Using jwt.decode here would allow
+          // an attacker to inject arbitrary Redis keys via a crafted jti.
+          const decoded = jwt.verify(rt, config.JWT_REFRESH_SECRET, {
+            algorithms: ['HS256'],
+            ignoreExpiration: true,
+          }) as { jti?: string; exp?: number };
+          if (decoded?.jti && decoded.exp) {
+            const secondsRemaining = Math.max(
+              0,
+              decoded.exp - Math.floor(Date.now() / 1000),
             );
+            if (secondsRemaining > 0) {
+              await redis.set(
+                `jwt:denylist:${decoded.jti}`,
+                '1',
+                'EX',
+                secondsRemaining,
+              );
+            }
           }
+        } catch {
+          // Invalid token — nothing to denylist; clear cookie and succeed.
         }
       }
       // Clear-cookie MUST spread COOKIE_OPTS so Path/HttpOnly/SameSite match
