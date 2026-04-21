@@ -156,7 +156,7 @@ export async function updateCampaign(
   campaignId: number,
   userId: number,
   input: UpdateCampaignInput,
-): Promise<Campaign | null> {
+): Promise<Campaign> {
   return sequelize.transaction(async (t) => {
     // Atomic guard — zero rows → campaign non-draft OR not owned by user
     const results = await sequelize.query<{ id: string }>(
@@ -200,7 +200,9 @@ export async function updateCampaign(
       }
     }
 
-    return Campaign.findOne({ where: { id: campaignId }, transaction: t });
+    const refreshed = await Campaign.findOne({ where: { id: campaignId }, transaction: t });
+    if (!refreshed) throw new NotFoundError('CAMPAIGN_NOT_FOUND');
+    return refreshed;
   });
 }
 
