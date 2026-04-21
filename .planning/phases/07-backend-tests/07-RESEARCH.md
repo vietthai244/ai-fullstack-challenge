@@ -492,17 +492,19 @@ describe('TEST-04: auth middleware boundaries', () => {
 
 ---
 
-## Open Questions
+## Open Questions (RESOLVED)
 
 1. **Redis availability during CI / local tests**
    - What we know: Redis is not currently running locally (port 6379 unreachable); no redis-cli installed
    - What's unclear: Will the reviewer's environment have Redis? Docker is not running locally either.
    - Recommendation: Document `redis-server` as a test prerequisite in README, OR mock `lib/queue.ts` in tests that don't exercise the queue. Mocking is more hermetic but adds complexity. Given Phase 10 will docker-compose everything, local Redis is a reasonable assumption; document the requirement.
+   - RESOLVED: Plans document Redis as a test prerequisite (docker compose up redis or brew services start redis). TEST-02 (concurrent-send) requires live Redis; TEST-01/03/04 only need Postgres.
 
 2. **bcrypt timing in createTestUser**
    - What we know: `BCRYPT_COST=4` in `.env.test` makes bcrypt fast for test user creation
    - What's unclear: Phase 7 tests don't test login (auth endpoints) — they test the JWT middleware. So `createTestUser` can bypass `authService.registerUser` entirely and insert with a dummy hash directly via `User.create`. This is faster and avoids the bcrypt dependency entirely.
    - Recommendation: Use direct `User.create` with a dummy hash in test helpers. Do not call `registerUser` in test setup.
+   - RESOLVED: Plans use `User.create` with a dummy bcrypt hash directly — no `registerUser` call in test helpers. Bypasses bcrypt entirely for speed.
 
 ---
 
