@@ -7,18 +7,16 @@ WORKDIR /app
 # Install corepack so Yarn 4 is available
 RUN corepack enable
 
-# Copy workspace manifests and lock file first (layer cache)
-COPY package.json yarn.lock .yarnrc.yml ./
-COPY shared/package.json ./shared/
+# Copy workspace manifests, lock file, root tsconfig, and full shared source.
+# tsconfig.base.json needed because shared/tsconfig.json extends ../tsconfig.base.json.
+# shared/ source needed because root postinstall runs "yarn workspace @campaign/shared build".
+COPY package.json yarn.lock .yarnrc.yml tsconfig.base.json ./
+COPY shared/ ./shared/
 COPY backend/package.json ./backend/
 COPY frontend/package.json ./frontend/
 
-# Install all deps
+# Install all deps (postinstall builds shared automatically).
 RUN yarn install --immutable
-
-# Build shared first (frontend imports from @campaign/shared dist/)
-COPY shared/ ./shared/
-RUN yarn workspace @campaign/shared build
 
 # Copy frontend source and build
 COPY frontend/ ./frontend/

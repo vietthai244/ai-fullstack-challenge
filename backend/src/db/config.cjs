@@ -28,6 +28,5 @@ module.exports = {
   production: {
     ...base,
     logging: false,
-    dialectOptions: { ssl: { require: true, rejectUnauthorized: false } },
   },
 };

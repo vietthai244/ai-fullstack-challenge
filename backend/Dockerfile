@@ -7,18 +7,18 @@ WORKDIR /app
 # Install corepack so Yarn 4 is available
 RUN corepack enable
 
-# Copy workspace manifests and lock file first (layer cache)
-COPY package.json yarn.lock .yarnrc.yml ./
-COPY shared/package.json ./shared/
+# Copy workspace manifests and lock file for cache, plus full shared source.
+# shared/ is included here because the root postinstall runs
+# "yarn workspace @campaign/shared build" — tsc needs shared/src/ to exist.
+# Backend and frontend manifests only (source copied after install for cache).
+COPY package.json yarn.lock .yarnrc.yml tsconfig.base.json ./
+COPY shared/ ./shared/
 COPY backend/package.json ./backend/
 COPY frontend/package.json ./frontend/
 
-# Install ALL deps (including devDeps for tsc)
+# Install ALL deps (including devDeps for tsc).
+# postinstall builds shared automatically.
 RUN yarn install --immutable
-
-# Build shared first (backend imports from @campaign/shared dist/)
-COPY shared/ ./shared/
-RUN yarn workspace @campaign/shared build
 
 # Copy backend source and compile
 COPY backend/ ./backend/
@@ -37,7 +37,7 @@ COPY shared/package.json ./shared/
 COPY backend/package.json ./backend/
 COPY frontend/package.json ./frontend/
 
-# Install production deps only
+# Install production deps only (focused install does not trigger root postinstall).
 RUN yarn workspaces focus @campaign/backend --production
 
 # Copy compiled output from builder
@@ -57,4 +57,4 @@ WORKDIR /app/backend
 EXPOSE 3000
 
 # Run migrations then start the server
-CMD ["sh", "-c", "yarn sequelize db:migrate && node dist/index.js"]
+CMD ["sh", "-c", "yarn db:migrate && node dist/index.js"]
