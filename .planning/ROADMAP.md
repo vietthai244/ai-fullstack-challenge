@@ -16,7 +16,7 @@ Critical path: Phases 1 → 2 → 3 → 4 → 5 are strictly sequential (each un
 - [ ] **Phase 1: Monorepo Foundation & Shared Schemas** - Yarn 4 flat workspaces (backend/frontend/shared), TS+ESLint+Prettier, pino logger, `@campaign/shared` Zod skeleton emitting `dist/`
 - [x] **Phase 2: Schema, Migrations & Seed** - Sequelize models + migrations (4-state enum, FKs, indexes, `tracking_token UUID`, `pgcrypto`) + demo seed (completed 2026-04-20)
 - [x] **Phase 3: Authentication** - Split-token JWT auth (access in memory + refresh in httpOnly cookie), Redis denylist, `/auth/*` endpoints, `authenticate` middleware (completed 2026-04-21)
-- [ ] **Phase 4: Campaigns & Recipients CRUD** - `/campaigns` + `/recipients` REST with cursor pagination, server-side status guards, single-SQL stats aggregate
+- [ ] **Phase 4: Campaigns & Recipients CRUD** - `/campaigns` + `/recipients` REST with offset pagination (campaigns) + cursor pagination (recipients), server-side status guards, single-SQL stats aggregate
 - [ ] **Phase 5: Async Send Queue (Schedule + Send)** - BullMQ queue+worker, atomic send guard, transaction-wrapped simulation, delayed schedule jobs with re-check on fire
 - [ ] **Phase 6: Open Tracking Pixel** - Public `GET /track/open/:trackingToken` returns 43-byte GIF + idempotent `opened_at` UPDATE, always-200 (oracle defense)
 - [ ] **Phase 7: Backend Tests** - Vitest + Supertest covering status-guard 409s, concurrent-send atomicity, stats aggregation, auth 401/cross-user 404
@@ -87,18 +87,24 @@ Context: Guards C6 (refresh-race + missing `withCredentials` + no-rotation + no-
 ---
 
 ### Phase 4: Campaigns & Recipients CRUD
-**Goal**: Authenticated users can list (with cursor pagination), create, read, update, and delete campaigns with server-enforced status guards; list recipients; and pull per-campaign stats computed in a single SQL aggregate.
+**Goal**: Authenticated users can list (with offset pagination for campaigns, cursor pagination for recipients), create, read, update, and delete campaigns with server-enforced status guards; list recipients; and pull per-campaign stats computed in a single SQL aggregate.
 **Depends on**: Phase 3
 **Requirements**: CAMP-01, CAMP-02, CAMP-03, CAMP-04, CAMP-05, CAMP-08, RECIP-01, RECIP-02
 **Success Criteria** (what must be TRUE):
-  1. `GET /campaigns?limit=20&cursor=...` returns `{ data, nextCursor, hasMore }` shape with opaque base64url cursor encoding `(created_at, id)`; repeated calls paging through 50+ seeded campaigns hit every row exactly once (no duplicates, no skips) even with identical `created_at` values
-  2. `POST /campaigns` with `{ name, subject, body, recipientEmails[] }` creates a campaign in `draft`, upserts recipients via `INSERT … ON CONFLICT (email) DO UPDATE RETURNING id` inside a transaction, and creates `CampaignRecipient` rows in `pending` state — all Zod-validated at the boundary
+  1. `GET /campaigns?page=1&limit=20` returns `{ data, pagination: { page, limit, total, totalPages } }` shape; `GET /recipients?limit=20&cursor=...` returns `{ data, nextCursor, hasMore }` with opaque base64url cursor encoding `(created_at, id)` — cursor pagination applies to recipients only
+  2. `POST /campaigns` with `{ name, subject, body, recipientEmails[] }` creates a campaign in `draft`, upserts recipients via `INSERT … ON CONFLICT (user_id, email) DO UPDATE RETURNING id` inside a transaction, and creates `CampaignRecipient` rows in `pending` state — all Zod-validated at the boundary
   3. `PATCH /campaigns/:id` and `DELETE /campaigns/:id` on a non-draft campaign return **409** with `{ error: { code, message } }`; delete on a draft cascades cleanly to `CampaignRecipient` rows
   4. `GET /campaigns/:id` returns the campaign with eager-loaded recipients (single Sequelize query — no N+1) and inline `stats` sub-object
-  5. `GET /campaigns/:id/stats` returns `{ total, sent, failed, opened, open_rate, send_rate }` computed by a single `COUNT(*) FILTER (WHERE …)` aggregate with `NULLIF` divide-by-zero guards; `POST /recipient` upserts by email; `GET /recipients` returns a paginated list
-**Plans**: TBD
+  5. `GET /campaigns/:id/stats` returns `{ total, sent, failed, opened, open_rate, send_rate }` computed by a single `COUNT(*) FILTER (WHERE …)` aggregate with `NULLIF` divide-by-zero guards; `POST /recipient` upserts by email; `GET /recipients` returns a cursor-paginated list
+**Plans**: 4 plans
 
-Context: Guards C1 (N+1 — use nested `include` for recipient detail, single aggregate for stats), C10 (status guard at service layer, not controllers — use 409 not 400), C16 (cursor bugs — `(created_at, id)` tiebreaker, `Sequelize.literal` with `replacements` not string interpolation, `isNaN` validation on decoded cursor, ownership via `req.user.id` not cursor payload), M2 (validated upstream in Phase 5 for scheduled_at), M3 (stats division-by-zero — `NULLIF` + `ROUND(…, 2)`), m5 (`nextCursor: null` + `hasMore: false` explicitly on last page).
+Plans:
+- [ ] 04-01-PLAN.md — Migration (add user_id FK to recipients + backfill + constraint swap) + Recipient model update + shared Zod schemas (D-26) + db:migrate [BLOCKING] (Wave 1, CAMP-01..05, CAMP-08, RECIP-01, RECIP-02 foundation)
+- [ ] 04-02-PLAN.md — campaignService.ts (offset list, create, detail, update, delete, computeCampaignStats) + recipientService.ts (upsert, cursor list) (Wave 2, all 8 requirements)
+- [ ] 04-03-PLAN.md — routes/campaigns.ts (replace stub, 6 handlers) + routes/recipients.ts (replace stub, 2 handlers) + docs/DECISIONS.md append (Wave 3, all 8 requirements)
+- [ ] 04-04-PLAN.md — 8 smoke scripts + run-all-phase4.sh + update run-all.sh (Wave 4, phase acceptance gate)
+
+Context: Guards C1 (N+1 — use nested `include` for recipient detail, single aggregate for stats), C10 (status guard at service layer, not controllers — use 409 not 400), C16 (cursor bugs — applies to `GET /recipients` only; `GET /campaigns` uses offset — `(created_at, id)` tiebreaker, `Sequelize.literal` with `replacements` not string interpolation, `isNaN` validation on decoded cursor, ownership via `req.user.id` not cursor payload), M3 (stats division-by-zero — `NULLIF` + `ROUND(…, 2)`), m5 (`nextCursor: null` + `hasMore: false` explicitly on last page — recipients only). Note: `GET /campaigns` uses offset pagination (page-number UI, user override of CLAUDE.md §5) — see docs/DECISIONS.md for rationale.
 
 ---
 
@@ -208,8 +214,8 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6 → 7 → 8 →
 |-------|----------------|--------|-----------|
 | 1. Monorepo Foundation & Shared Schemas | 4/4 | Complete | 2026-04-20 |
 | 2. Schema, Migrations & Seed | 4/4 | Complete   | 2026-04-20 |
-| 3. Authentication | 3/4 | Executing | - |
-| 4. Campaigns & Recipients CRUD | 0/TBD | Not started | - |
+| 3. Authentication | 4/4 | Complete | 2026-04-21 |
+| 4. Campaigns & Recipients CRUD | 0/4 | Planning | - |
 | 5. Async Send Queue (Schedule + Send) | 0/TBD | Not started | - |
 | 6. Open Tracking Pixel | 0/TBD | Not started | - |
 | 7. Backend Tests | 0/TBD | Not started | - |
@@ -219,3 +225,4 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6 → 7 → 8 →
 
 ---
 *Roadmap created: 2026-04-20*
+*Last updated: 2026-04-21 — Phase 4 planned (4 plans, 4 waves)*
