@@ -99,3 +99,76 @@ Recipients are scoped to the creating user (`recipients.user_id` FK, `UNIQUE(use
 ## Campaign List Pagination: Offset over Cursor (Phase 4)
 
 `GET /campaigns` uses offset pagination (`?page=1&limit=20`) rather than the cursor-based `(created_at, id)` approach used for `GET /recipients`. Rationale: the campaign list requires page-number UI (jump to page N, show "Page 3 of 12") which cursor pagination cannot support. The consistency risk of offset is acceptable here because the campaign count per user is small (< 1000 for any realistic v1 user), inserts during pagination are infrequent, and the UX value of numbered pages outweighs cursor consistency guarantees. `GET /recipients` retains cursor pagination because recipient lists can be large and are consumed programmatically (no page-jump UI).
+
+---
+
+## 4-State Campaign Machine (draft → scheduled → sending → sent)
+
+**Decision:** Campaign status follows a strict four-state machine enforced atomically at the database layer via `UPDATE campaigns SET status = 'sending' WHERE id = $1 AND status IN ('draft', 'scheduled')`. The API returns 409 Conflict when the guard matches zero rows.
+
+**Why four states instead of three:** A three-state machine (draft → sending → sent) cannot represent a campaign that has been committed to send at a future time but has not yet started sending. `scheduled` is the state where `scheduled_at` is set and a BullMQ delayed job is queued. If the BullMQ job fires and the campaign has been deleted or edited in the interim, the worker re-checks status on entry and bails cleanly — no orphaned state.
+
+**Why atomic guard matters:** Two concurrent `POST /campaigns/:id/send` requests can race. Without the `WHERE status IN (...)` guard, both read `draft`, both write `sending`, and both enqueue a worker job — the campaign is processed twice. The atomic `UPDATE ... RETURNING` returns `[affectedCount]`; if the count is 0, the race was lost and the handler returns 409. This is verified by the TEST-02 concurrent-send test.
+
+**Why 409 and not 400:** 409 Conflict is the semantically correct HTTP status for a state machine guard violation — the request is syntactically valid but conflicts with the current resource state. 400 would imply the client sent malformed input.
+
+**References:**
+- CAMP-04, CAMP-05, CAMP-06, CAMP-07 in REQUIREMENTS.md
+- TEST-02 (concurrent-send atomicity) in REQUIREMENTS.md
+- backend/src/services/campaignService.ts (triggerSend guard)
+
+---
+
+## Index Choices
+
+**Decision:** Two explicit composite indexes were created beyond the auto-generated unique and primary key indexes.
+
+1. `idx_campaigns_created_by_created_at_id` on `campaigns(created_by, created_at DESC, id DESC)` — supports `GET /campaigns` which filters by `created_by = req.user.id` and orders by `(created_at DESC, id DESC)`. The three-column index allows Postgres to satisfy the filter + sort in a single B-tree scan with no file sort.
+
+2. `idx_campaign_recipients_campaign_id_status` on `campaign_recipients(campaign_id, status)` — supports `GET /campaigns/:id/stats` which runs `COUNT(*) FILTER (WHERE status = 'sent')` etc. The index allows Postgres to aggregate by scanning the index directly (index-only scan on supported Postgres versions) rather than the full heap.
+
+**What was NOT indexed (and why):**
+- `users.email` and `recipients.email` — covered by `UNIQUE` constraints which auto-create B-tree unique indexes in Postgres. A duplicate explicit index would waste write amplification (Pitfall 9 in the research notes).
+- `campaign_recipients.tracking_token` — covered by `UNIQUE` constraint for the same reason.
+- `campaign_recipients(campaign_id, recipient_id)` — the composite primary key already creates a unique index on those columns.
+
+**References:**
+- DATA-02 in REQUIREMENTS.md
+- backend/src/migrations/ (indexes created in migration files)
+
+---
+
+## Async Queue Design (BullMQ)
+
+**Decision:** Email sending is delegated to a BullMQ worker that processes jobs from a Redis queue. The HTTP handler transitions the campaign to `sending` atomically, enqueues a job, and returns 202 Accepted immediately. The worker runs inside a Sequelize transaction and transitions the campaign to `sent` when all recipients are processed.
+
+**Why a queue and not synchronous processing:** Email sending (even simulated) is I/O-bound and can be slow. Blocking the HTTP response thread until all recipients are processed would degrade API responsiveness and prevent proper 202 semantics. The queue also enables delayed scheduling (`POST /campaigns/:id/schedule`): BullMQ's `delay` option holds the job until the scheduled timestamp.
+
+**Why separate IORedis connections for Queue and Worker:** BullMQ's documentation requires separate connections for the queue (producer) and the worker (consumer). A single shared connection can cause deadlocks because the worker uses Redis blocking commands (`BRPOP`) that would block the queue's ability to add jobs. Both connections use `maxRetriesPerRequest: null` — the BullMQ default, required to prevent silent job hangs under load (Pitfall C5).
+
+**Worker correctness guarantees:**
+- Status re-check on entry: if the campaign is no longer `sending` when the job fires (deleted, or stale delayed job), the worker returns without touching recipient rows.
+- Transaction wrapping: all recipient status updates and the campaign `sent` transition are in one Sequelize transaction — partial state on crash is impossible.
+- `worker.on('failed')` and `worker.on('error')` handlers log via pino — no silent failures.
+
+**References:**
+- QUEUE-01..04 in REQUIREMENTS.md
+- backend/src/lib/queue.ts, backend/src/services/sendWorker.ts
+
+---
+
+## Open-Tracking Pixel Design
+
+**Decision:** `GET /track/open/:trackingToken` serves a 43-byte transparent GIF89a and runs an idempotent `UPDATE campaign_recipients SET opened_at = NOW() WHERE tracking_token = $1 AND opened_at IS NULL`. The endpoint is public (no auth) and **always returns 200 + GIF** regardless of whether the token matches any row.
+
+**Why the tracking_token column instead of the composite PK:** The composite primary key `(campaign_id, recipient_id)` is composed of BIGINT values. Embedding `?campaign_id=1&recipient_id=42` in pixel URLs would allow enumeration of all campaign-recipient combinations via sequential integer scanning. The `tracking_token UUID` column provides 122 bits of entropy — brute force enumeration is computationally infeasible.
+
+**Why always-200 (oracle defense):** If the endpoint returned 404 for an invalid token, an attacker could confirm which tokens are valid by observing the response code. With always-200, the caller learns nothing about token validity — even a completely garbage token receives the same pixel response.
+
+**Why idempotent UPDATE (WHERE opened_at IS NULL):** Email clients (and Google's image proxy) may fetch the pixel multiple times. The first fetch sets `opened_at`; subsequent fetches match zero rows and return 200 + GIF with no state change. This ensures `opened_at` always reflects the first open, not the most recent.
+
+**Why a module-scoped pixel buffer:** The 43-byte GIF is allocated once at module load and reused for every request. Allocating a new Buffer per request would be unnecessary GC pressure for a hot, stateless endpoint.
+
+**References:**
+- TRACK-01 in REQUIREMENTS.md
+- backend/src/routes/track.ts
