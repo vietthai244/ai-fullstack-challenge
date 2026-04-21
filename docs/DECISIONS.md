@@ -59,3 +59,35 @@ strips `SameSite`.
 - 03-RESEARCH.md Assumptions Log — A1
 - Express `clearCookie` path-matching requirement:
   https://github.com/expressjs/express/issues/3941
+
+## GET /campaigns: offset pagination (overrides CLAUDE.md §5 cursor-only rule)
+
+**Decision:** `GET /campaigns` uses **offset pagination** (`?page=1&limit=20`) with a page-number
+UI, not the cursor-based infinite-scroll pagination specified in CLAUDE.md constraint #5.
+
+**Why:** The UX requirement is a numbered page control (e.g. "Page 3 of 12") that lets users
+jump to arbitrary pages. Cursor pagination is append-only — it supports "load more" but cannot
+support "jump to page N" without materialising every prior page. The product requirement
+(explicit page-number navigation) is incompatible with cursor semantics.
+
+**Scope of override:** Campaigns list only. `GET /recipients` retains cursor pagination — it has
+no page-jump requirement and the cursor is the safer default for large unbounded result sets.
+
+**Trade-offs accepted:**
+- Offset pagination has O(offset) cost for deep pages on large tables. For a take-home
+  campaign manager with at most hundreds of campaigns per user, this is irrelevant.
+- Page results can drift between requests if rows are inserted/deleted mid-session (a user
+  on page 3 may see a repeated or skipped campaign if the list changes). Acceptable for this
+  use case — campaigns are rarely created/deleted rapidly during a browsing session.
+
+**Response shape:**
+```json
+{
+  "data": [...],
+  "pagination": { "page": 1, "limit": 20, "total": 47, "totalPages": 3 }
+}
+```
+
+**References:**
+- CLAUDE.md §5 (constraint being overridden for this endpoint)
+- 04-CONTEXT.md D-16..D-21 (updated pagination decisions)

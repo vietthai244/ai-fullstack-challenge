@@ -9,7 +9,9 @@ status: ready-for-planning
 <domain>
 ## Phase Boundary
 
-Authenticated users can list (with cursor pagination), create, read, update, and delete campaigns with server-enforced status guards; list recipients; upsert recipients by email; and pull per-campaign stats computed in a single SQL aggregate.
+Authenticated users can list (with **offset pagination, page-number UI**), create, read, update, and delete campaigns with server-enforced status guards; list recipients (cursor-paginated); upsert recipients by email; and pull per-campaign stats computed in a single SQL aggregate.
+
+> **Pagination change (2026-04-21):** `GET /campaigns` uses offset pagination — user requires page-number UI, not infinite scroll. This overrides CLAUDE.md constraint #5 for campaigns only. `GET /recipients` keeps cursor pagination (unchanged). See `docs/DECISIONS.md` for rationale.
 
 **In scope (REQUIREMENTS.md):** CAMP-01, CAMP-02, CAMP-03, CAMP-04, CAMP-05, CAMP-08, RECIP-01, RECIP-02
 
@@ -33,7 +35,7 @@ Authenticated users can list (with cursor pagination), create, read, update, and
   3. Drops the old `UNIQUE(email)` constraint and adds `UNIQUE(user_id, email)`.
   4. Adds index on `recipients(user_id)` for list queries.
 - **D-03:** Cross-user access to a recipient (user A fetches user B's recipient id) returns **404** (AUTH-07 precedent), not 403.
-- **D-04:** `GET /recipients` filters by `req.user.id`. Uses the same cursor-pagination shape as `GET /campaigns` (base64url `{created_at, id}`, `Sequelize.literal` with `:replacements`, no string interpolation — C16).
+- **D-04:** `GET /recipients` filters by `req.user.id`. Uses **cursor pagination** (unchanged): base64url `{created_at, id}`, `Sequelize.literal` with `:replacements`, no string interpolation — C16 pitfalls apply. Recipients list is NOT subject to the campaigns pagination change.
 
 ### PATCH /campaigns/:id (editable fields)
 
@@ -63,14 +65,23 @@ Authenticated users can list (with cursor pagination), create, read, update, and
 - **D-14:** `POST /recipient` (RECIP-01) is the **only** endpoint that sets/updates `name`. Accepts `{email, name?}`. Does `INSERT ... ON CONFLICT (user_id, email) DO UPDATE SET name = COALESCE(EXCLUDED.name, recipients.name)` — only overwrites when name explicitly provided.
 - **D-15:** The upsert in POST/PATCH campaigns must return `id` for every email in the input (both inserted and pre-existing). Since `DO NOTHING` does not return existing rows, use `ON CONFLICT (user_id, email) DO UPDATE SET email = EXCLUDED.email RETURNING id` (no-op update trick) OR a follow-up `SELECT id FROM recipients WHERE user_id = :uid AND email = ANY(:emails)`. Planner to pick — both work, first is one query, second is more readable.
 
-### Cursor pagination (locked — all C16 pitfalls)
+### GET /campaigns pagination — OFFSET (user override of CLAUDE.md §5)
 
-- **D-16:** Cursor format: `base64url(JSON.stringify({ cAt: created_at_iso, cId: id_string }))`. Opaque to client.
-- **D-17:** Cursor query uses `Sequelize.literal('(created_at, id) < (:cAt, :cId)')` with `replacements: { cAt, cId }` — no string interpolation.
-- **D-18:** Ownership scoping is NEVER in the cursor payload — always `where: { user_id: req.user.id }` on the query. Cursor only encodes positional fields.
-- **D-19:** On last page, response is `{ data: [...], nextCursor: null, hasMore: false }` — explicit, not undefined (m5).
-- **D-20:** Malformed cursor (bad base64, JSON parse fail, `isNaN(id)`, invalid ISO) → 400 `INVALID_CURSOR`. Do NOT silently fall back to page 1.
-- **D-21:** Default `limit = 20`, max `limit = 100`. Zod-validated as `.int().positive().max(100)`.
+- **D-16:** `GET /campaigns` uses **offset pagination**. Query params: `?page=1&limit=20`. Both optional with defaults.
+- **D-17:** Response shape: `{ data: CampaignListItem[], pagination: { page: number, limit: number, total: number, totalPages: number } }`.
+- **D-18:** Ownership scoping: `WHERE user_id = req.user.id` always on the query (never from a cursor payload).
+- **D-19:** Sequelize: `{ where: { user_id }, order: [['created_at','DESC'],['id','DESC']], limit, offset: (page-1)*limit }`. Count via `Model.count({ where: { user_id } })` in same service call.
+- **D-20:** Malformed page/limit (non-integer, negative, zero, > 100) → 400 `INVALID_PAGINATION`. Zod coerces strings to numbers.
+- **D-21:** `page` default = 1, `limit` default = 20, max `limit` = 100. Zod: `z.coerce.number().int().positive().max(100)`.
+
+### GET /recipients pagination — CURSOR (unchanged, C16 applies)
+
+- **D-16r:** Cursor format: `base64url(JSON.stringify({ cAt: created_at_iso, cId: id_string }))`. Opaque to client.
+- **D-17r:** Cursor query: `Sequelize.literal('(created_at, id) < (:cAt, :cId)')` with `replacements: { cAt, cId }` — no string interpolation (C16).
+- **D-18r:** Ownership never in cursor — always `WHERE user_id = req.user.id` on query.
+- **D-19r:** Last page: `{ data: [...], nextCursor: null, hasMore: false }` — explicit, not undefined (m5).
+- **D-20r:** Malformed cursor → 400 `INVALID_CURSOR`. No silent fallback.
+- **D-21r:** Default `limit = 20`, max `limit = 100`.
 
 ### Route + service organization
 
@@ -81,14 +92,15 @@ Authenticated users can list (with cursor pagination), create, read, update, and
 
 ### Zod schemas (add to shared)
 
-- **D-26:** `@campaign/shared` adds: `CreateCampaignSchema`, `UpdateCampaignSchema`, `CampaignSchema`, `CampaignDetailSchema`, `CampaignListItemSchema`, `StatsSchema`, `CursorPageSchema` (generic), `CreateRecipientSchema`, `RecipientSchema`, `RecipientListSchema`.
+- **D-26:** `@campaign/shared` adds: `CreateCampaignSchema`, `UpdateCampaignSchema`, `CampaignSchema`, `CampaignDetailSchema`, `CampaignListItemSchema`, `StatsSchema`, `OffsetPageQuerySchema` (for campaigns list), `CursorPageSchema` (for recipients list), `CreateRecipientSchema`, `RecipientSchema`, `RecipientListSchema`.
 - **D-27:** After adding schemas, run `yarn workspace @campaign/shared build` to rebuild `dist/` (same pattern as Phase 3 plan 02).
 
 ### Claude's Discretion
 
 - Exact Sequelize query shape for the upsert-returning-id problem (D-15) — both options listed, planner picks one.
-- Whether to inline or extract the cursor encode/decode helpers (planner call based on reuse in Phase 5 delayed-job status endpoint).
+- Whether to inline or extract the cursor encode/decode helpers for `GET /recipients` (planner call — used by Phase 5 too).
 - Index strategy beyond the required `recipients(user_id)` and Phase 2's existing indexes — add only if EXPLAIN shows a seq scan on realistic data.
+- Whether `campaigns.count()` + `campaigns.findAll()` run as two separate queries or one via `findAndCountAll()` — both correct, planner picks.
 </decisions>
 
 <specifics>
@@ -97,7 +109,8 @@ Authenticated users can list (with cursor pagination), create, read, update, and
 - **Request/response contract** is strict: every response wrapped in `{ data: ... }` (matches Phase 3). Errors are `{ error: { code, message } }`.
 - **Atomic update guards** are the single most important correctness property — the business-rule test matrix in Phase 7 (TEST-01..04) will hammer concurrent PATCH/DELETE/send. The service layer's `UPDATE ... WHERE status = 'draft' RETURNING` pattern is the defense.
 - **Transaction boundary** for POST /campaigns: (1) upsert recipients, (2) create campaign, (3) insert campaign_recipients in one `INSERT ... SELECT` or batched insert. Wrap in `sequelize.transaction()`.
-- **Cursor pagination is the reviewer's tripwire** — C16 lists 4 specific bugs. Tests must prove no-skip / no-dupe at `created_at` collision boundaries.
+- **Campaigns list uses offset pagination** — `GET /campaigns?page=1&limit=20` returns `{ data, pagination: { page, limit, total, totalPages } }`. Frontend renders numbered page controls.
+- **Recipients cursor is the remaining tripwire** — C16 applies to `GET /recipients` only. Tests must prove no-skip / no-dupe for recipients at `created_at` collision boundaries.
 </specifics>
 
 <canonical_refs>
@@ -112,7 +125,7 @@ Authenticated users can list (with cursor pagination), create, read, update, and
 - `.planning/ROADMAP.md` — Phase 4 section with success criteria + context (C1, C10, C16, M3, m5 citations)
 
 ### Pitfalls catalog (read line-by-line for Phase 4 items)
-- `.planning/research/PITFALLS.md` — C1 (N+1), C10 (status guard layer), C11 (atomic UPDATE RETURNING), C16 (cursor bugs: id tiebreaker, Sequelize.literal replacements, ownership outside cursor, explicit nulls on last page), M3 (stats divide-by-zero), m5 (nextCursor: null on last page)
+- `.planning/research/PITFALLS.md` — C1 (N+1), C10 (status guard layer), C11 (atomic UPDATE RETURNING), C16 (cursor bugs — applies to `GET /recipients` only; `GET /campaigns` now uses offset), M3 (stats divide-by-zero), m5 (nextCursor: null on last page — recipients only)
 
 ### Prior phase artifacts (Phase 4 builds directly on these)
 - `backend/src/db/index.ts` — Sequelize singleton + models registry (Phase 2)
