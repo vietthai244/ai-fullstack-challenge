@@ -3,9 +3,9 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: executing
-stopped_at: Phase 3 plan 01 complete (Wave 1 scaffolding: redis+compose, env.ts, redis.ts, errors.ts, validate.ts, errorHandler.ts) — ready for plan 03-02
-last_updated: "2026-04-21T08:01:00Z"
-last_activity: 2026-04-21 -- Phase 3 plan 01 executed (3/3 tasks, 3 commits: 75f1225 bbe4a71 3896c99)
+stopped_at: Phase 3 plan 02 complete (Wave 2 primitives: shared auth schemas + tokens.ts + authService.ts) — ready for plan 03-03
+last_updated: "2026-04-21T01:30:00Z"
+last_activity: 2026-04-21 -- Phase 3 plan 02 executed (3/3 tasks, 3 commits: 2a7c705 e2fc46f 5ca08b5)
 progress:
   total_phases: 10
   completed_phases: 2
@@ -25,10 +25,10 @@ See: .planning/PROJECT.md (updated 2026-04-20)
 
 ## Current Position
 
-Phase: 3 (Authentication) — EXECUTING (1/4 plans executed)
-Plan: next is 03-02 (Wave 2 primitives — tokens.ts + authService.ts + shared Zod schemas)
-Status: Plan 03-01 complete (3/3 tasks, 3 commits)
-Last activity: 2026-04-21 -- Plan 03-01 executed (redis+compose, env.ts, redis.ts, errors.ts, validate.ts, errorHandler.ts)
+Phase: 3 (Authentication) — EXECUTING (2/4 plans executed)
+Plan: next is 03-03 (Wave 3 — auth routes: register, login, refresh, logout, me)
+Status: Plan 03-02 complete (3/3 tasks, 3 commits)
+Last activity: 2026-04-21 -- Plan 03-02 executed (shared auth schemas, tokens.ts, authService.ts)
 
 Progress: [██░░░░░░░░] 20%  (6/51 v1 REQ-IDs done ≈ 12%; 8/12 plans committed [4 phase-1 done + 4 phase-2 done + 4 phase-3 planned] ≈ 67% planned coverage for current milestone)
 
@@ -46,7 +46,7 @@ Progress: [██░░░░░░░░] 20%  (6/51 v1 REQ-IDs done ≈ 12%; 8
 |-------|-------|-------|----------|
 | 1     | 4     | 19.6min | 4.9min |
 | 2     | 2     | 16min   | 8min    |
-| 3     | 1/4   | 3.1min  | 3.1min  |
+| 3     | 2/4   | 11.1min | 5.6min  |
 
 **Recent Trend:**
 
@@ -85,6 +85,10 @@ Recent structural decisions affecting current work:
 - Phase 3 planning: Smoke harness `backend/test/smoke/*.sh` (curl-based per-REQ scripts + run-all.sh) — Phase 3 acceptance gate. Temporary; Phase 7 replaces with Vitest+Supertest (TEST-01..04). Structural grep + live curl chosen over Vitest in Phase 3 because Phase 7 formally owns the test harness.
 - Phase 3 planning: AUTH-07 cross-user = 404 (not 403) enforced at service layer via `findOne({ where: { id, createdBy: req.user.id } })` → null → `NotFoundError`. Stub campaigns/recipients routers in Plan 03-04 always return 404. Formal cross-user Supertest test lands in Phase 7 TEST-04. Convention propagates to Phase 4's full CRUD.
 - Plan 03-01: ioredis v5 named import `{ Redis as IORedis }` required — default import has no construct signatures under NodeNext moduleResolution; aliased to preserve `new IORedis(...)` call sites unchanged (Rule 1 auto-fix)
+- Plan 03-02: LoginSchema uses password min=1 (not min=8) — login must not leak registration password policy; Register enforces the real constraint
+- Plan 03-02: TIMING_DUMMY_HASH cost must match config.BCRYPT_COST (=10) — cost mismatch reintroduces timing oracle defeating P3-4 defense
+- Plan 03-02: signRefresh decodes its own freshly-signed token to surface exp — avoids storing TTL as a magic constant and ensures jti/exp are always in sync
+- Plan 03-02: Comment strings must avoid verbatim grep-assertion patterns — paraphrase descriptions per carry-forward from Plans 01-04/02-03
 
 ### Pending Todos
 
