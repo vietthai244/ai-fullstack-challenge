@@ -304,7 +304,13 @@ export async function triggerSend(campaignId: number, userId: number): Promise<v
     },
   );
   if (count === 0) throw new ConflictError('CAMPAIGN_NOT_SENDABLE');
-  await sendQueue.add('send-campaign', { campaignId, userId });
+  try {
+    await sendQueue.add('send-campaign', { campaignId, userId });
+  } catch (enqueueErr) {
+    // Roll back status so the campaign is not permanently stranded if Redis is unavailable
+    await Campaign.update({ status: 'draft' }, { where: { id: campaignId } });
+    throw enqueueErr;
+  }
 }
 
 // ---------------------------------------------------------------------------
@@ -333,5 +339,11 @@ export async function scheduleCampaign(
   if (count === 0) throw new ConflictError('CAMPAIGN_NOT_SCHEDULABLE');
 
   const delay = scheduledDate.getTime() - Date.now();
-  await sendQueue.add('send-campaign', { campaignId, userId }, { delay });
+  try {
+    await sendQueue.add('send-campaign', { campaignId, userId }, { delay });
+  } catch (enqueueErr) {
+    // Roll back status so the campaign is not permanently stranded if Redis is unavailable
+    await Campaign.update({ status: 'draft' }, { where: { id: campaignId } });
+    throw enqueueErr;
+  }
 }
