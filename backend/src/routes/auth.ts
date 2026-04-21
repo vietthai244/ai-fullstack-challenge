@@ -128,17 +128,24 @@ authRouter.post(
 
       // 3. Rotation: denylist the OLD jti with TTL = remaining life.
       //    Guard against zero/negative TTL (token on the edge of expiry).
+      //    If Redis fails here, clear cookie and 401 — safer than silently
+      //    skipping the denylist and issuing a new token (WR-01).
       const secondsRemaining = Math.max(
         0,
         decoded.exp - Math.floor(Date.now() / 1000),
       );
       if (secondsRemaining > 0) {
-        await redis.set(
-          `jwt:denylist:${decoded.jti}`,
-          '1',
-          'EX',
-          secondsRemaining,
-        );
+        try {
+          await redis.set(
+            `jwt:denylist:${decoded.jti}`,
+            '1',
+            'EX',
+            secondsRemaining,
+          );
+        } catch {
+          res.clearCookie('rt', { ...COOKIE_OPTS, maxAge: undefined });
+          throw new UnauthorizedError('REFRESH_UNAVAILABLE');
+        }
       }
 
       // 4. Re-verify user still exists (handles edge case where account was
