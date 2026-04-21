@@ -1,52 +1,46 @@
-// frontend/src/pages/LoginPage.tsx
+// frontend/src/pages/RegisterPage.tsx
 //
-// Phase 9 (UI-02): Login page.
-// Access token dispatched to Redux memory (never localStorage — T-09-02-02 defense).
-// Return-to URL read from React Router location.state.from — relative path only (open redirect defense).
-// Error displayed inline below form (not toast) — login errors are user-facing credential feedback.
+// Phase 10.1 (UI-02/UI-04): Registration page.
+// Mirrors LoginPage structure — same container, shadcn components, mutation pattern.
+// Auto-login on success: dispatch setAuth → navigate('/campaigns') (D-11).
+// Access token dispatched to Redux memory only — never localStorage (T-10.1-06).
 import React from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useMutation } from '@tanstack/react-query';
 import { useDispatch } from 'react-redux';
-import { useNavigate, useLocation, Link } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { api } from '@/lib/apiClient';
 import { setAuth } from '@/store/authSlice';
 import type { AppDispatch } from '@/store/index';
-import { LoginSchema, type LoginInput } from '@campaign/shared';
+import { RegisterSchema, type RegisterInput } from '@campaign/shared';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
 
-export function LoginPage(): React.ReactElement {
+export function RegisterPage(): React.ReactElement {
   const dispatch = useDispatch<AppDispatch>();
   const navigate = useNavigate();
-  const location = useLocation();
-  // Read return-to path from ProtectedRoute state.from — only use pathname (relative path).
-  // Fall back to /campaigns. Never redirect to an absolute URL (open redirect defense).
-  const from =
-    (location.state as { from?: { pathname: string } } | null)?.from?.pathname ?? '/campaigns';
 
   const {
     register,
     handleSubmit,
     formState: { errors },
-  } = useForm<LoginInput>({
-    resolver: zodResolver(LoginSchema),
-    defaultValues: { email: '', password: '' },
+  } = useForm<RegisterInput>({
+    resolver: zodResolver(RegisterSchema),
+    defaultValues: { name: '', email: '', password: '' },
   });
 
-  const loginMutation = useMutation({
-    mutationFn: (data: LoginInput) =>
+  const registerMutation = useMutation({
+    mutationFn: (data: RegisterInput) =>
       api.post<{ data: { accessToken: string; user: { id: number; email: string; name: string } } }>(
-        '/auth/login',
+        '/auth/register',
         data,
       ),
     onSuccess: (res) => {
-      // Store token in Redux memory only — NEVER localStorage or sessionStorage (T-09-02-02).
       dispatch(setAuth({ accessToken: res.data.data.accessToken, user: res.data.data.user }));
-      navigate(from, { replace: true });
+      navigate('/campaigns');
     },
   });
 
@@ -56,13 +50,25 @@ export function LoginPage(): React.ReactElement {
         <h1 className="text-center text-2xl font-semibold">Campaign Manager</h1>
         <Card>
           <CardHeader>
-            <CardTitle className="text-xl">Log in to your account</CardTitle>
+            <CardTitle className="text-xl">Create your account</CardTitle>
           </CardHeader>
           <CardContent>
             <form
-              onSubmit={handleSubmit((data) => loginMutation.mutate(data))}
+              onSubmit={handleSubmit((data) => registerMutation.mutate(data))}
               className="space-y-4"
             >
+              <div className="space-y-1">
+                <Label htmlFor="name">Name</Label>
+                <Input
+                  id="name"
+                  type="text"
+                  autoComplete="name"
+                  {...register('name')}
+                />
+                {errors.name && (
+                  <p className="text-destructive text-sm">{errors.name.message}</p>
+                )}
+              </div>
               <div className="space-y-1">
                 <Label htmlFor="email">Email</Label>
                 <Input
@@ -80,35 +86,35 @@ export function LoginPage(): React.ReactElement {
                 <Input
                   id="password"
                   type="password"
-                  autoComplete="current-password"
+                  autoComplete="new-password"
                   {...register('password')}
                 />
                 {errors.password && (
                   <p className="text-destructive text-sm">{errors.password.message}</p>
                 )}
               </div>
-              {loginMutation.isError && (
+              {registerMutation.isError && (
                 <p className="text-destructive text-sm">
-                  {loginMutation.error instanceof Error
-                    ? loginMutation.error.message
-                    : 'Invalid credentials'}
+                  {registerMutation.error instanceof Error
+                    ? registerMutation.error.message
+                    : 'Registration failed'}
                 </p>
               )}
               <Button
                 type="submit"
                 variant="default"
                 className="w-full"
-                disabled={loginMutation.isPending}
+                disabled={registerMutation.isPending}
               >
-                {loginMutation.isPending ? 'Logging in...' : 'Log in'}
+                {registerMutation.isPending ? 'Creating account...' : 'Create account'}
               </Button>
             </form>
           </CardContent>
         </Card>
         <p className="text-center text-sm text-muted-foreground">
-          Don't have an account?{' '}
-          <Link to="/register" className="underline hover:text-foreground">
-            Register
+          Already have an account?{' '}
+          <Link to="/login" className="underline hover:text-foreground">
+            Log in
           </Link>
         </p>
       </div>

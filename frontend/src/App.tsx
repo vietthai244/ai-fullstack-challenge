@@ -4,14 +4,26 @@
 // Phase 8 placeholder functions (LoginPage, AppShell) replaced with real page imports.
 // useBootstrap() is called unconditionally at top level — runs on ALL routes, not just /login.
 // Toaster is mounted at root so Phase 9 toast calls work from any component.
+import React from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
 import { useBootstrap } from '@/hooks/useBootstrap';
 import { ProtectedRoute } from '@/components/ProtectedRoute';
+import { NavBar } from '@/components/NavBar';
 import { Toaster } from '@/components/ui/sonner';
 import { LoginPage } from '@/pages/LoginPage';
+import { RegisterPage } from '@/pages/RegisterPage';
 import { CampaignListPage } from '@/pages/CampaignListPage';
 import { NewCampaignPage } from '@/pages/NewCampaignPage';
 import { CampaignDetailPage } from '@/pages/CampaignDetailPage';
+
+function ProtectedLayout({ children }: { children: React.ReactNode }): React.ReactElement {
+  return (
+    <>
+      <NavBar />
+      <main className="mx-auto max-w-screen-xl px-4 py-6">{children}</main>
+    </>
+  );
+}
 
 export default function App(): React.ReactElement {
   // Bootstrap fires /auth/refresh → /auth/me on mount.
@@ -21,15 +33,18 @@ export default function App(): React.ReactElement {
   return (
     <>
       <Routes>
-        {/* Public route — login page accessible without auth */}
+        {/* Public routes — accessible without auth */}
         <Route path="/login" element={<LoginPage />} />
+        <Route path="/register" element={<RegisterPage />} />
 
         {/* Protected routes — ProtectedRoute redirects to /login if not authed */}
         <Route
           path="/campaigns"
           element={
             <ProtectedRoute>
-              <CampaignListPage />
+              <ProtectedLayout>
+                <CampaignListPage />
+              </ProtectedLayout>
             </ProtectedRoute>
           }
         />
@@ -38,7 +53,9 @@ export default function App(): React.ReactElement {
           path="/campaigns/new"
           element={
             <ProtectedRoute>
-              <NewCampaignPage />
+              <ProtectedLayout>
+                <NewCampaignPage />
+              </ProtectedLayout>
             </ProtectedRoute>
           }
         />
@@ -46,7 +63,9 @@ export default function App(): React.ReactElement {
           path="/campaigns/:id"
           element={
             <ProtectedRoute>
-              <CampaignDetailPage />
+              <ProtectedLayout>
+                <CampaignDetailPage />
+              </ProtectedLayout>
             </ProtectedRoute>
           }
         />
