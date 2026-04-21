@@ -21,7 +21,7 @@ Critical path: Phases 1 → 2 → 3 → 4 → 5 are strictly sequential (each un
 - [x] **Phase 6: Open Tracking Pixel** - Public `GET /track/open/:trackingToken` returns 43-byte GIF + idempotent `opened_at` UPDATE, always-200 (oracle defense) (completed 2026-04-21)
 - [x] **Phase 7: Backend Tests** - Vitest + Supertest covering status-guard 409s, concurrent-send atomicity, stats aggregation, auth 401/cross-user 404 (completed 2026-04-21)
 - [x] **Phase 8: Frontend Foundation** - Vite + React 18 + Tailwind + shadcn + Redux + React Query + axios refresh interceptor + bootstrap + route guard (completed 2026-04-21)
-- [ ] **Phase 9: Frontend Pages & Actions** - Login, campaigns list (infinite scroll), new-campaign form, detail page with polling + Schedule/Send/Delete/Logout actions + CampaignBadge test
+- [x] **Phase 9: Frontend Pages & Actions** - Login, campaigns list (infinite scroll), new-campaign form, detail page with polling + Schedule/Send/Delete/Logout actions + CampaignBadge test (completed 2026-04-22)
 - [ ] **Phase 10: Full Docker Stack, Integration & Docs** - Full `docker compose up` (postgres+redis+api+nginx-served web), README with demo login + "How I Used Claude Code", `docs/DECISIONS.md`
 
 ## Phase Details
@@ -204,11 +204,11 @@ Context: Guards C6's frontend half (refresh-race memoization + global `withCrede
 **Plans**: 5 plans
 
 Plans:
-- [ ] 09-01-PLAN.md — Install deps + shadcn components + main.tsx QueryCache + CampaignBadge + TEST-05 (Wave 1, UI-12, TEST-05)
-- [ ] 09-02-PLAN.md — LoginPage (Wave 2, UI-02)
-- [ ] 09-03-PLAN.md — CampaignListPage with offset infinite scroll (Wave 2, UI-06)
-- [ ] 09-04-PLAN.md — NewCampaignPage with EmailTokenizer (Wave 3, UI-07)
-- [ ] 09-05-PLAN.md — CampaignDetailPage + App.tsx wiring (Wave 4, UI-08/09/10/11/13)
+- [x] 09-01-PLAN.md — Install deps + shadcn components + main.tsx QueryCache + CampaignBadge + TEST-05 (Wave 1, UI-12, TEST-05)
+- [x] 09-02-PLAN.md — LoginPage (Wave 2, UI-02)
+- [x] 09-03-PLAN.md — CampaignListPage with offset infinite scroll (Wave 2, UI-06)
+- [x] 09-04-PLAN.md — NewCampaignPage with EmailTokenizer (Wave 3, UI-07)
+- [x] 09-05-PLAN.md — CampaignDetailPage + App.tsx wiring (Wave 4, UI-08/09/10/11/13)
 **UI hint**: yes
 
 Context: Guards C13 (invalidate after every mutation; correct `refetchInterval` signature for React Query v5), m1 (exhaustive TS switch covering all 4 states — `sending` badge must not be forgotten), and the `datetime-local` timezone trap from FEATURES.md. The Schedule action must convert local time to ISO UTC before POST. This is the single largest phase — plan-phase step should split it into plans along the four pages + shared components.
@@ -245,9 +245,9 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6 → 7 → 8 →
 | 6. Open Tracking Pixel | 0/1 | Planned | - |
 | 7. Backend Tests | 0/2 | Planned | - |
 | 8. Frontend Foundation | 3/3 | Complete | 2026-04-21 |
-| 9. Frontend Pages & Actions | 0/TBD | Not started | - |
+| 9. Frontend Pages & Actions | 5/5 | Complete | 2026-04-22 |
 | 10. Full Docker Stack, Integration & Docs | 0/TBD | Not started | - |
 
 ---
 *Roadmap created: 2026-04-20*
-*Last updated: 2026-04-21 — Phase 7 planned (2 plans)*
+*Last updated: 2026-04-22 — Phase 9 complete (5/5 plans; 13 tests green)*

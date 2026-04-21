@@ -67,18 +67,18 @@
 ### Frontend
 
 - [ ] **UI-01**: Vite + React 18 + TS app with Tailwind + shadcn/ui, Redux Toolkit store, and React Query provider configured
-- [ ] **UI-02**: `/login` page — form POSTs to `/auth/login`; access token stored in Redux memory; relies on httpOnly refresh cookie
+- [x] **UI-02**: `/login` page — form POSTs to `/auth/login`; access token stored in Redux memory; relies on httpOnly refresh cookie
 - [ ] **UI-03**: App bootstrap — on load, calls `/auth/refresh` then `/auth/me` to rehydrate session after page refresh
 - [ ] **UI-04**: Route guard — redirects unauthenticated users to `/login`; preserves return-to URL
 - [ ] **UI-05**: HTTP client — injects access token, transparently refreshes once on 401 then retries, clears session on persistent auth failure
-- [ ] **UI-06**: `/campaigns` list — cursor pagination via React Query `useInfiniteQuery`, status badges (`draft=grey`, `scheduled=blue`, `sending=amber w/ spinner`, `sent=green`), skeleton loaders, empty state, "New campaign" action
-- [ ] **UI-07**: `/campaigns/new` — Zod-validated form for name / subject / body / recipient-email tokenizer; `POST /campaigns`; redirect to detail on success
-- [ ] **UI-08**: `/campaigns/:id` detail — `send_rate` and `open_rate` progress bars, per-recipient status list, conditional action buttons based on status
-- [ ] **UI-09**: Schedule action — date/time picker (timezone-aware), `POST /campaigns/:id/schedule`
-- [ ] **UI-10**: Send action — confirm dialog, `POST /campaigns/:id/send`; while status is `sending`, stats + detail queries refetch every 2s (`refetchInterval: 2000`), stopping on `sent`
-- [ ] **UI-11**: Delete action — confirm dialog, `DELETE /campaigns/:id`
-- [ ] **UI-12**: Global error handling — React Query error boundary + toast notifications that surface API error messages; skeleton loaders during fetches
-- [ ] **UI-13**: Logout — `POST /auth/logout`, clears Redux auth, redirects to `/login`
+- [x] **UI-06**: `/campaigns` list — offset pagination via React Query `useInfiniteQuery` (approved deviation: offset over cursor, per Phase 4 decision), status badges (`draft=grey`, `scheduled=blue`, `sending=amber w/ spinner`, `sent=green`), skeleton loaders, empty state, "New campaign" action
+- [x] **UI-07**: `/campaigns/new` — Zod-validated form for name / subject / body / recipient-email tokenizer; `POST /campaigns`; redirect to detail on success
+- [x] **UI-08**: `/campaigns/:id` detail — `send_rate` and `open_rate` progress bars, per-recipient status list, conditional action buttons based on status
+- [x] **UI-09**: Schedule action — date/time picker (timezone-aware), `POST /campaigns/:id/schedule`
+- [x] **UI-10**: Send action — confirm dialog, `POST /campaigns/:id/send`; while status is `sending`, stats + detail queries refetch every 2s (`refetchInterval: (query) => query.state.data?.status === 'sending' ? 2000 : false`), stopping on `sent`
+- [x] **UI-11**: Delete action — confirm dialog, `DELETE /campaigns/:id`
+- [x] **UI-12**: Global error handling — React Query error boundary + toast notifications that surface API error messages; skeleton loaders during fetches
+- [x] **UI-13**: Logout — `POST /auth/logout`, clears Redux auth, redirects to `/login`
 
 ### Testing
 
@@ -86,7 +86,7 @@
 - [ ] **TEST-02**: Vitest + Supertest — send atomicity: two parallel `POST /send` calls on the same draft result in exactly one 202 and one 409
 - [ ] **TEST-03**: Vitest + Supertest — stats aggregation: seeded data produces correct counts and rates from `GET /campaigns/:id/stats`
 - [ ] **TEST-04**: Vitest + Supertest — auth middleware: 401 on missing token, 401 on invalid token, cross-user access returns 404
-- [ ] **TEST-05**: Vitest + @testing-library/react — `CampaignBadge` renders correct color/label per status (incl. `sending`)
+- [x] **TEST-05**: Vitest + @testing-library/react — `CampaignBadge` renders correct color/label per status (incl. `sending`)
 
 ### Documentation
 
@@ -175,23 +175,23 @@ Deferred — tracked but not in current roadmap.
 | QUEUE-04 | Phase 5 | Pending |
 | TRACK-01 | Phase 6 | Pending |
 | UI-01 | Phase 8 | Pending |
-| UI-02 | Phase 9 | Pending |
+| UI-02 | Phase 9 | Complete |
 | UI-03 | Phase 8 | Pending |
 | UI-04 | Phase 8 | Pending |
 | UI-05 | Phase 8 | Pending |
-| UI-06 | Phase 9 | Pending |
-| UI-07 | Phase 9 | Pending |
-| UI-08 | Phase 9 | Pending |
-| UI-09 | Phase 9 | Pending |
-| UI-10 | Phase 9 | Pending |
-| UI-11 | Phase 9 | Pending |
-| UI-12 | Phase 9 | Pending |
-| UI-13 | Phase 9 | Pending |
+| UI-06 | Phase 9 | Complete |
+| UI-07 | Phase 9 | Complete |
+| UI-08 | Phase 9 | Complete |
+| UI-09 | Phase 9 | Complete |
+| UI-10 | Phase 9 | Complete |
+| UI-11 | Phase 9 | Complete |
+| UI-12 | Phase 9 | Complete |
+| UI-13 | Phase 9 | Complete |
 | TEST-01 | Phase 7 | Pending |
 | TEST-02 | Phase 7 | Pending |
 | TEST-03 | Phase 7 | Pending |
 | TEST-04 | Phase 7 | Pending |
-| TEST-05 | Phase 9 | Pending |
+| TEST-05 | Phase 9 | Complete |
 | DOC-01 | Phase 10 | Pending |
 | DOC-02 | Phase 10 | Pending |
 | DOC-03 | Phase 10 | Pending |

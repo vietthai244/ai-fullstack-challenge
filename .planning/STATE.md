@@ -3,15 +3,15 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: executing
-stopped_at: Phase 8 complete — Vite+React+shadcn shell, Redux auth store, memoized axios interceptor, 9/9 tests green. Ready for Phase 9 (frontend pages).
-last_updated: "2026-04-21T23:35:00Z"
-last_activity: 2026-04-21 -- Phase 8 executed (3 plans: scaffold + redux/axios + app shell; 9 tests green; UAT passed)
+stopped_at: Phase 9 complete — 5/5 plans executed, 13 tests green, verification passed (offset pagination deviation accepted). Ready for Phase 10 (Docker + docs).
+last_updated: "2026-04-22T00:00:00Z"
+last_activity: 2026-04-22 -- Phase 9 executed (5 plans: shadcn+badge+main / login / campaign-list / new-campaign / detail+app-wiring; 13 tests green, verification passed)
 progress:
   total_phases: 10
-  completed_phases: 8
-  total_plans: 24
-  completed_plans: 24
-  percent: 80
+  completed_phases: 9
+  total_plans: 29
+  completed_plans: 29
+  percent: 90
 ---
 
 # Project State
@@ -21,16 +21,16 @@ progress:
 See: .planning/PROJECT.md (updated 2026-04-21)
 
 **Core value:** Server-side business-rule correctness and clean, testable architecture — proven by tests and narrated through transparent AI collaboration.
-**Current focus:** Phase 7 CLOSED — 11/11 backend tests green. Ready for Phase 8 (frontend foundation)
+**Current focus:** Phase 9 CLOSED — 5/5 plans, 13 tests green. Ready for Phase 10 (Docker + docs)
 
 ## Current Position
 
-Phase: 7 (Backend Tests) — COMPLETE (2/2 plans executed)
-Plan: 08-01 (frontend foundation) — NEXT
-Status: Phase 7 verified (11 tests green); TEST-01/02/03/04 closed
-Last activity: 2026-04-21 -- Phase 7 executed (Vitest 2.1.9 infra + status-guard/send-atomicity/stats/auth tests)
+Phase: 9 (Frontend Pages & Actions) — COMPLETE (5/5 plans executed)
+Plan: 10-01 (docker full stack) — NEXT
+Status: Phase 9 verified (13 tests green); UI-02/06/07/08/09/10/11/12/13 + TEST-05 closed
+Last activity: 2026-04-22 -- Phase 9 executed (shadcn+CampaignBadge / LoginPage / CampaignListPage / NewCampaignPage / CampaignDetailPage+App.tsx)
 
-Progress: [███████░░░] 70%  (32/51 v1 REQ-IDs done ≈ 63%; 21/21 plans committed [4+4+4+4+4+1+2])
+Progress: [█████████░] 90%  (42/51 v1 REQ-IDs done ≈ 82%; 29/29 plans committed [4+4+4+4+4+1+2+3+5])
 
 ## Performance Metrics
 
