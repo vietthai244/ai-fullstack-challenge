@@ -1,5 +1,5 @@
 # docker-compose.yml (repo root)
-# Phase 2: postgres. Phase 3 adds redis. Phase 10 extends with api + web.
+# Phase 2: postgres. Phase 3 adds redis. Phase 10: api + web (full stack).
 services:
   postgres:
     image: postgres:16-alpine
@@ -28,6 +28,31 @@ services:
       retries: 10
     volumes:
       - redisdata:/data
+
+  api:
+    build:
+      context: .
+      dockerfile: backend/Dockerfile
+    env_file: .env
+    environment:
+      DATABASE_URL: postgres://campaign:campaign@postgres:5432/campaigns
+      REDIS_URL: redis://redis:6379
+      NODE_ENV: production
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+  web:
+    build:
+      context: .
+      dockerfile: frontend/Dockerfile
+    ports:
+      - "8080:80"
+    depends_on:
+      api:
+        condition: service_started
 
 volumes:
   pgdata:
