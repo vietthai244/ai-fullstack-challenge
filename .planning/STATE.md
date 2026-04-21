@@ -3,15 +3,15 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: executing
-stopped_at: Phase 5 complete — 4/4 plans executed. BullMQ send queue live. Ready for Phase 6 (tracking pixel) or Phase 7 (backend tests).
-last_updated: "2026-04-21T14:00:00Z"
-last_activity: 2026-04-21 -- Phase 5 complete (4/4 plans, CR-01+WR-01-03 fixes applied, typecheck green)
+stopped_at: Phase 6 complete — tracking pixel endpoint live. Ready for Phase 7 (backend tests) or Phase 8 (frontend foundation).
+last_updated: "2026-04-21T16:00:00Z"
+last_activity: 2026-04-21 -- Phase 6 executed (track.ts + app.ts mount + smoke scripts; TRACK-01 closed)
 progress:
   total_phases: 10
-  completed_phases: 5
-  total_plans: 18
-  completed_plans: 18
-  percent: 50
+  completed_phases: 6
+  total_plans: 19
+  completed_plans: 19
+  percent: 60
 ---
 
 # Project State
@@ -21,16 +21,16 @@ progress:
 See: .planning/PROJECT.md (updated 2026-04-21)
 
 **Core value:** Server-side business-rule correctness and clean, testable architecture — proven by tests and narrated through transparent AI collaboration.
-**Current focus:** Phase 5 CLOSED — ready for Phase 6 (tracking pixel, only needs Phase 2) or Phase 7 (backend tests, needs Phases 3-5)
+**Current focus:** Phase 6 CLOSED — ready for Phase 7 (backend tests) or Phase 8 (frontend foundation)
 
 ## Current Position
 
-Phase: 5 (Async Send Queue) — COMPLETE (4/4 plans executed)
-Plan: 06-01 (tracking pixel) or 07-01 (backend tests) — NEXT
-Status: Phase 5 verified (5/5 must-haves); code review fixes applied (CR-01, WR-01, WR-02, WR-03)
-Last activity: 2026-04-21 -- Phase 5 executed (BullMQ queue lib, service layer, route handlers, smoke scripts + 4 code review fixes)
+Phase: 6 (Open Tracking Pixel) — COMPLETE (1/1 plans executed)
+Plan: 07-01 (backend tests) — NEXT
+Status: Phase 6 verified (5/5 must-haves); TRACK-01 closed
+Last activity: 2026-04-21 -- Phase 6 executed (track.ts public pixel route + app.ts mount + smoke scripts)
 
-Progress: [█████░░░░░] 50%  (27/51 v1 REQ-IDs done ≈ 53%; 18/18 plans committed [4+4+4+4+4])
+Progress: [██████░░░░] 60%  (28/51 v1 REQ-IDs done ≈ 55%; 19/19 plans committed [4+4+4+4+4+1])
 
 ## Performance Metrics
 

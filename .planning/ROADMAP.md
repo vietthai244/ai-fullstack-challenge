@@ -18,7 +18,7 @@ Critical path: Phases 1 → 2 → 3 → 4 → 5 are strictly sequential (each un
 - [x] **Phase 3: Authentication** - Split-token JWT auth (access in memory + refresh in httpOnly cookie), Redis denylist, `/auth/*` endpoints, `authenticate` middleware (completed 2026-04-21)
 - [x] **Phase 4: Campaigns & Recipients CRUD** - `/campaigns` + `/recipients` REST with offset pagination (campaigns) + cursor pagination (recipients), server-side status guards, single-SQL stats aggregate (completed 2026-04-21)
 - [x] **Phase 5: Async Send Queue (Schedule + Send)** - BullMQ queue+worker, atomic send guard, transaction-wrapped simulation, delayed schedule jobs with re-check on fire (completed 2026-04-21)
-- [ ] **Phase 6: Open Tracking Pixel** - Public `GET /track/open/:trackingToken` returns 43-byte GIF + idempotent `opened_at` UPDATE, always-200 (oracle defense)
+- [x] **Phase 6: Open Tracking Pixel** - Public `GET /track/open/:trackingToken` returns 43-byte GIF + idempotent `opened_at` UPDATE, always-200 (oracle defense) (completed 2026-04-21)
 - [ ] **Phase 7: Backend Tests** - Vitest + Supertest covering status-guard 409s, concurrent-send atomicity, stats aggregation, auth 401/cross-user 404
 - [ ] **Phase 8: Frontend Foundation** - Vite + React 18 + Tailwind + shadcn + Redux + React Query + axios refresh interceptor + bootstrap + route guard
 - [ ] **Phase 9: Frontend Pages & Actions** - Login, campaigns list (infinite scroll), new-campaign form, detail page with polling + Schedule/Send/Delete/Logout actions + CampaignBadge test
@@ -143,7 +143,7 @@ Context: Guards C4 (stuck-active — never swallow processor errors; let BullMQ 
 **Plans**: 1 plan
 
 Plans:
-- [ ] 06-01-PLAN.md — track.ts route (module-scoped PIXEL buffer, idempotent UPDATE, oracle-safe handler) + app.ts mount + smoke scripts (Wave 1, TRACK-01)
+- [x] 06-01-PLAN.md — track.ts route (module-scoped PIXEL buffer, idempotent UPDATE, oracle-safe handler) + app.ts mount + smoke scripts (Wave 1, TRACK-01)
 
 Context: Guards C17 (BIGINT enumeration → use `tracking_token UUID` with 122 bits of entropy; 404 oracle leak → always 200 + GIF; idempotency race → `WHERE opened_at IS NULL` so second Gmail-proxy fetch does not overwrite; module-scoped buffer, not disk read per request). Public router must be mounted at the Express app level separately from protected routers so C7's middleware inheritance doesn't accidentally gate it.
 
