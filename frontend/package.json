@@ -4,16 +4,43 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "build": "echo 'frontend build deferred to Phase 8' && exit 0",
-    "dev": "echo 'frontend dev deferred to Phase 8' && exit 0",
+    "build": "vite build",
+    "dev": "vite",
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "lint": "eslint src",
-    "test": "echo 'frontend tests land in Phase 9' && exit 0"
+    "test": "vitest run",
+    "test:watch": "vitest"
   },
   "dependencies": {
-    "@campaign/shared": "workspace:*"
+    "@campaign/shared": "workspace:*",
+    "@reduxjs/toolkit": "2.11.2",
+    "@tanstack/react-query": "5.99.2",
+    "axios": "1.15.1",
+    "class-variance-authority": "0.7.0",
+    "clsx": "2.1.1",
+    "lucide-react": "0.414.0",
+    "next-themes": "^0.4.6",
+    "react": "18.3.1",
+    "react-dom": "18.3.1",
+    "react-redux": "9.2.0",
+    "react-router-dom": "6.30.3",
+    "sonner": "^2.0.7",
+    "tailwind-merge": "2.4.0"
   },
   "devDependencies": {
-    "typescript": "^5.8.3"
+    "@testing-library/dom": "^10.4.1",
+    "@testing-library/jest-dom": "6.9.1",
+    "@testing-library/react": "16.3.2",
+    "@testing-library/user-event": "14.6.1",
+    "@types/react": "^18.3.20",
+    "@types/react-dom": "^18.3.5",
+    "@vitejs/plugin-react": "4.7.0",
+    "autoprefixer": "^10.4.21",
+    "jsdom": "29.0.2",
+    "postcss": "^8.5.3",
+    "tailwindcss": "^3.4.19",
+    "typescript": "^5.8.3",
+    "vite": "5.4.21",
+    "vitest": "2.1.9"
   }
 }
