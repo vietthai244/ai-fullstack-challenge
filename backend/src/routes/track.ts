@@ -21,21 +21,28 @@ const PIXEL = Buffer.from(
 
 export const trackRouter: Router = Router();
 
+// UUID format guard — reject non-UUID inputs before DB round-trip.
+// Malformed tokens (scanners, crawlers, typos) still get the pixel but skip the DB.
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
 trackRouter.get('/open/:trackingToken', async (req, res) => {
-  try {
-    await CampaignRecipient.update(
-      { openedAt: new Date() },
-      {
-        where: {
-          trackingToken: req.params.trackingToken,
-          openedAt: { [Op.is]: null as any },
-        },
-      }
-    );
-  } catch {
-    // Intentionally swallowed — oracle defense.
-    // Caller must never know whether token matched, DB was reachable, etc.
-    // DO NOT call next(err) here — errorHandler would change Content-Type + status.
+  const { trackingToken } = req.params;
+  if (UUID_RE.test(trackingToken)) {
+    try {
+      await CampaignRecipient.update(
+        { openedAt: new Date() },
+        {
+          where: {
+            trackingToken,
+            openedAt: { [Op.is]: null as any },
+          },
+        }
+      );
+    } catch {
+      // Intentionally swallowed — oracle defense.
+      // Caller must never know whether token matched, DB was reachable, etc.
+      // DO NOT call next(err) here — errorHandler would change Content-Type + status.
+    }
   }
   res.set({
     'Content-Type':    'image/gif',
