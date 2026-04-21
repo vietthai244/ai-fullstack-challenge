@@ -19,7 +19,7 @@ Critical path: Phases 1 → 2 → 3 → 4 → 5 are strictly sequential (each un
 - [x] **Phase 4: Campaigns & Recipients CRUD** - `/campaigns` + `/recipients` REST with offset pagination (campaigns) + cursor pagination (recipients), server-side status guards, single-SQL stats aggregate (completed 2026-04-21)
 - [x] **Phase 5: Async Send Queue (Schedule + Send)** - BullMQ queue+worker, atomic send guard, transaction-wrapped simulation, delayed schedule jobs with re-check on fire (completed 2026-04-21)
 - [x] **Phase 6: Open Tracking Pixel** - Public `GET /track/open/:trackingToken` returns 43-byte GIF + idempotent `opened_at` UPDATE, always-200 (oracle defense) (completed 2026-04-21)
-- [ ] **Phase 7: Backend Tests** - Vitest + Supertest covering status-guard 409s, concurrent-send atomicity, stats aggregation, auth 401/cross-user 404
+- [x] **Phase 7: Backend Tests** - Vitest + Supertest covering status-guard 409s, concurrent-send atomicity, stats aggregation, auth 401/cross-user 404 (completed 2026-04-21)
 - [ ] **Phase 8: Frontend Foundation** - Vite + React 18 + Tailwind + shadcn + Redux + React Query + axios refresh interceptor + bootstrap + route guard
 - [ ] **Phase 9: Frontend Pages & Actions** - Login, campaigns list (infinite scroll), new-campaign form, detail page with polling + Schedule/Send/Delete/Logout actions + CampaignBadge test
 - [ ] **Phase 10: Full Docker Stack, Integration & Docs** - Full `docker compose up` (postgres+redis+api+nginx-served web), README with demo login + "How I Used Claude Code", `docs/DECISIONS.md`
@@ -162,8 +162,8 @@ Context: Guards C17 (BIGINT enumeration → use `tracking_token UUID` with 122 b
 **Plans**: 2 plans
 
 Plans:
-- [ ] 07-01-PLAN.md — Test infrastructure: install Vitest 2.1.9 + Supertest, vitest.config.ts (singleFork), globalSetup.ts, setup.ts, helpers/auth.ts, helpers/seed.ts, .env.test (Wave 1, TEST-01..04 infra)
-- [ ] 07-02-PLAN.md — Four test files: status-guard.test.ts (TEST-01), send-atomicity.test.ts (TEST-02), stats.test.ts (TEST-03), auth.test.ts (TEST-04) (Wave 2, TEST-01/02/03/04)
+- [x] 07-01-PLAN.md — Test infrastructure: install Vitest 2.1.9 + Supertest, vitest.config.ts (singleFork), globalSetup.ts, setup.ts, helpers/auth.ts, helpers/seed.ts, .env.test (Wave 1, TEST-01..04 infra)
+- [x] 07-02-PLAN.md — Four test files: status-guard.test.ts (TEST-01), send-atomicity.test.ts (TEST-02), stats.test.ts (TEST-03), auth.test.ts (TEST-04) (Wave 2, TEST-01/02/03/04)
 
 Context: Guards C18 (Vitest 2.1.9 pin via root resolutions, `singleFork` pool serialization against one shared DB, `shared/` dist already built from Phase 1 `postinstall`). App split is important — `app.ts` exports `buildApp()` factory and `index.ts` calls `buildApp().listen(PORT)` so Supertest can import without binding a port. This phase is the first deliverable that proves backend correctness and runs independently of the frontend — safe to parallelize with Phase 8.
 
