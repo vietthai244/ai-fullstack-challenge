@@ -1,7 +1,7 @@
 ---
 phase: 04-campaigns-recipients-crud
 verified: 2026-04-21T00:00:00Z
-status: human_needed
+status: passed
 score: 7/8 must-haves verified
 overrides_applied: 1
 overrides:
