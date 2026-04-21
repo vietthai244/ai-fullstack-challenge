@@ -51,6 +51,12 @@ export default [
     files: ['backend/**/*.ts'],
     rules: {
       'no-console': 'off',
+      // Honor underscore-prefix convention for intentionally unused args
+      // (e.g., Express error middleware requires 4 args including _next).
+      '@typescript-eslint/no-unused-vars': [
+        'error',
+        { argsIgnorePattern: '^_', varsIgnorePattern: '^_' },
+      ],
     },
   },
 
