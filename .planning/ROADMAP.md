@@ -24,6 +24,7 @@ Critical path: Phases 1 → 2 → 3 → 4 → 5 are strictly sequential (each un
 - [x] **Phase 9: Frontend Pages & Actions** - Login, campaigns list (infinite scroll), new-campaign form, detail page with polling + Schedule/Send/Delete/Logout actions + CampaignBadge test (completed 2026-04-22)
 - [x] **Phase 10: Full Docker Stack, Integration & Docs** - Full `docker compose up` (postgres+redis+api+nginx-served web), README with demo login + "How I Used Claude Code", `docs/DECISIONS.md`
 - [x] **Phase 10.1: UAT Fixes — Auth, Navigation & Register** (INSERTED) - Login button loading bug, auth persistence on reload, auth guard redirect, page navigation, /register route with login↔register nav (completed 2026-04-22)
+- [ ] **Phase 10.2: Send/Delete Bug Fixes & UX Polish** (INSERTED) - Send button stuck in forever-pending (status stays "sending"), delete draft 409 conflict, recipients space-key input, meaningful toast messages, editable recipients on draft
 
 ## Phase Details
 
@@ -235,6 +236,23 @@ Plans:
 
 ---
 
+### Phase 10.2: Send/Delete Bug Fixes & UX Polish (INSERTED)
+**Goal**: Fix two runtime bugs and three UX gaps discovered during UAT: (1) Send button leaves campaign in perpetual "sending" state with infinite polling, (2) deleting a draft campaign returns 409 CAMPAIGN_NOT_EDITABLE, (3) recipients input only adds on blur not on space key, (4) API error/success toasts show raw error codes instead of human-readable messages, (5) recipients list on draft campaigns is not editable.
+**Depends on**: Phase 10.1
+**Requirements**: UI-08, UI-09, UI-10 (fix/complete)
+**Success Criteria** (what must be TRUE):
+  1. Clicking Send Now on a draft/scheduled campaign transitions it to sent; polling stops; UI reflects final state
+  2. Deleting a draft campaign succeeds (200/204) with toast confirmation and redirect to /campaigns
+  3. Recipients tag input accepts new entries on Space key in addition to blur/Enter
+  4. All mutation success/error toasts show human-readable messages (not raw error codes)
+  5. Recipients on a draft campaign can be added/removed inline without leaving the detail page
+**Plans**: TBD — to be planned via /gsd-plan-phase 10.2
+
+Plans:
+(none yet)
+
+---
+
 ### Phase 10: Full Docker Stack, Integration & Docs
 **Goal**: `docker compose up` from a fresh clone spins up postgres + redis + api (migrations auto-run) + nginx-served web on a single host port (`8080:80`), the reviewer opens `http://localhost:8080` and exercises the full app with no CORS and no baked-in `VITE_API_URL`, and the README + `docs/DECISIONS.md` + "How I Used Claude Code" deliverables are complete.
 **Depends on**: Phase 6, Phase 7, Phase 9
@@ -274,7 +292,8 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6 → 7 → 8 →
 | 9. Frontend Pages & Actions | 5/5 | Complete | 2026-04-22 |
 | 10. Full Docker Stack, Integration & Docs | 4/4 | Complete | 2026-04-22 |
 | 10.1. UAT Fixes — Auth, Navigation & Register (INSERTED) | 3/3 | Complete | 2026-04-22 |
+| 10.2. Send/Delete Bug Fixes & UX Polish (INSERTED) | 0/0 | Not started | - |
 
 ---
 *Roadmap created: 2026-04-20*
-*Last updated: 2026-04-22 — Phase 10.1 complete (3/3 plans; nginx cookie path fix + NavBar + RegisterPage)*
+*Last updated: 2026-04-22 — Phase 10.2 inserted: Send/delete bug fixes + UX polish (5 issues)*

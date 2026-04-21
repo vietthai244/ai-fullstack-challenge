@@ -60,6 +60,7 @@ Progress: [█████████░] 90%  (42/51 v1 REQ-IDs done ≈ 82%; 
 
 ### Roadmap Evolution
 - Phase 10.1 inserted after Phase 10: UAT fixes — login button loading bug, auth persistence (refresh 401 blank page), auth guard redirect to /login, page navigation, /register route with login↔register nav (URGENT)
+- Phase 10.2 inserted after Phase 10.1: Send button forever-pending bug, delete draft 409 conflict, recipients space-key input, meaningful toast messages, editable recipients on draft (URGENT)
 
 ### Decisions
 
