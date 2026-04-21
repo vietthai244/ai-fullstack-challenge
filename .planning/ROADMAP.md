@@ -179,7 +179,12 @@ Context: Guards C18 (Vitest 2.1.9 pin via root resolutions, `singleFork` pool se
   3. A protected route visited while unauthenticated redirects to `/login` and preserves the return-to URL; after successful login the user lands back on the original route
   4. `axios.defaults.withCredentials = true` is set globally; the response interceptor injects `Authorization: Bearer`, catches 401, awaits a **memoized** in-flight refresh promise (N concurrent 401s = exactly 1 network call to `/auth/refresh`), then retries the original request; persistent auth failure clears Redux and redirects to `/login`
   5. React Query `QueryClientProvider` is mounted at the root and Redux `Provider` wraps it; no server data (campaigns, recipients, stats) is stored in any Redux slice (verified by code review — only `accessToken`, `user`, `bootstrapped`, and UI flags in Redux)
-**Plans**: TBD
+**Plans**: 3 plans
+
+Plans:
+- [ ] 08-01-PLAN.md — Project scaffold: package.json deps, vite.config.ts, tsconfig.json, tailwind/postcss configs, shadcn init, vitest.config.ts, test setup + Wave-0 test scaffolds (Wave 1, UI-01)
+- [ ] 08-02-PLAN.md — Redux store + authSlice + axios apiClient with memoized refresh interceptor (Wave 2, UI-05)
+- [ ] 08-03-PLAN.md — App shell: main.tsx, App.tsx, useBootstrap hook, ProtectedRoute + real test assertions green (Wave 3, UI-01/UI-03/UI-04)
 **UI hint**: yes
 
 Context: Guards C6's frontend half (refresh-race memoization + global `withCredentials`), C12 (Redux only holds auth token + UI flags — React Query owns server state), and locks in the boundary that downstream mutation/polling hooks in Phase 9 will rely on. jsdom polyfill stubs (`TextEncoder`, `structuredClone`, `ResizeObserver`, `matchMedia`) go in the test setup file here so component tests in Phase 9 don't break.
@@ -232,7 +237,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6 → 7 → 8 →
 | 5. Async Send Queue (Schedule + Send) | 4/4 | Complete | 2026-04-21 |
 | 6. Open Tracking Pixel | 0/1 | Planned | - |
 | 7. Backend Tests | 0/2 | Planned | - |
-| 8. Frontend Foundation | 0/TBD | Not started | - |
+| 8. Frontend Foundation | 0/3 | Not started | - |
 | 9. Frontend Pages & Actions | 0/TBD | Not started | - |
 | 10. Full Docker Stack, Integration & Docs | 0/TBD | Not started | - |
 
