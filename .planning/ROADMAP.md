@@ -140,7 +140,10 @@ Context: Guards C4 (stuck-active — never swallow processor errors; let BullMQ 
   3. The route is mounted on a router that does **not** inherit `authenticate` middleware; calling it without any auth header succeeds
   4. First call with a valid token sets `opened_at = NOW()`; subsequent calls with the same token do not overwrite `opened_at` (verified by SQL `UPDATE … WHERE tracking_token = $1 AND opened_at IS NULL` matching zero rows on the second call)
   5. The pixel buffer is allocated at module scope (verified by grep — buffer is declared outside the request handler), not re-created per request
-**Plans**: TBD
+**Plans**: 1 plan
+
+Plans:
+- [ ] 06-01-PLAN.md — track.ts route (module-scoped PIXEL buffer, idempotent UPDATE, oracle-safe handler) + app.ts mount + smoke scripts (Wave 1, TRACK-01)
 
 Context: Guards C17 (BIGINT enumeration → use `tracking_token UUID` with 122 bits of entropy; 404 oracle leak → always 200 + GIF; idempotency race → `WHERE opened_at IS NULL` so second Gmail-proxy fetch does not overwrite; module-scoped buffer, not disk read per request). Public router must be mounted at the Express app level separately from protected routers so C7's middleware inheritance doesn't accidentally gate it.
 
@@ -223,7 +226,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6 → 7 → 8 →
 | 3. Authentication | 4/4 | Complete | 2026-04-21 |
 | 4. Campaigns & Recipients CRUD | 4/4 | Complete | 2026-04-21 |
 | 5. Async Send Queue (Schedule + Send) | 4/4 | Complete | 2026-04-21 |
-| 6. Open Tracking Pixel | 0/TBD | Not started | - |
+| 6. Open Tracking Pixel | 0/1 | Planned | - |
 | 7. Backend Tests | 0/TBD | Not started | - |
 | 8. Frontend Foundation | 0/TBD | Not started | - |
 | 9. Frontend Pages & Actions | 0/TBD | Not started | - |
@@ -231,4 +234,4 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6 → 7 → 8 →
 
 ---
 *Roadmap created: 2026-04-20*
-*Last updated: 2026-04-21 — Phase 5 complete (4/4 plans executed)*
+*Last updated: 2026-04-21 — Phase 6 planned (1 plan)*
