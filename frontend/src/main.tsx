@@ -8,13 +8,20 @@
 import React from 'react';
 import ReactDOM from 'react-dom/client';
 import { Provider } from 'react-redux';
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { QueryClient, QueryClientProvider, QueryCache } from '@tanstack/react-query';
+import { toast } from 'sonner';
 import { BrowserRouter } from 'react-router-dom';
 import { store } from '@/store/index';
 import App from '@/App';
 import '@/index.css';
 
 const queryClient = new QueryClient({
+  queryCache: new QueryCache({
+    onError: (error) => {
+      const message = error instanceof Error ? error.message : 'Something went wrong';
+      toast.error(message);
+    },
+  }),
   defaultOptions: {
     queries: {
       retry: 1,
