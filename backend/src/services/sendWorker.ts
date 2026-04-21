@@ -23,20 +23,30 @@ export interface SendJobData {
 }
 
 export async function processSendJob(job: Job<SendJobData>): Promise<void> {
-  const { campaignId } = job.data;
-
-  // QUEUE-03: stale delayed job guard — re-check status before any writes
-  const campaign = await Campaign.findByPk(campaignId);
-  if (!campaign || campaign.status !== 'sending') {
-    logger.info(
-      { campaignId, status: campaign?.status ?? 'not found' },
-      'send job skipped — campaign not in sending state',
-    );
-    return; // not an error; bail cleanly
-  }
+  const { campaignId, userId } = job.data;
 
   // QUEUE-02 + C9: single transaction — all or nothing
+  // QUEUE-03: stale delayed job guard is now INSIDE the transaction to close the
+  // TOCTOU window. A conditional UPDATE serves as the atomic re-check: if the
+  // campaign is no longer in 'sending' state (e.g. a second concurrent job already
+  // processed it), guardCount === 0 and we bail cleanly without marking job failed.
   await sequelize.transaction(async (t) => {
+    // Atomic guard: only proceed if campaign is still owned by userId and in 'sending'
+    const [guardCount] = await Campaign.update(
+      { updatedAt: new Date() },
+      {
+        where: { id: campaignId, createdBy: userId, status: 'sending' },
+        transaction: t,
+      },
+    );
+    if (guardCount === 0) {
+      logger.info(
+        { campaignId, userId },
+        'send job skipped — campaign not in sending state (atomic guard)',
+      );
+      return; // not an error; bail cleanly
+    }
+
     const recipients = await CampaignRecipient.findAll({
       where: { campaignId, status: 'pending' },
       transaction: t,
