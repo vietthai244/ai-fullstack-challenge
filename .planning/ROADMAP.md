@@ -101,7 +101,7 @@ Context: Guards C6 (refresh-race + missing `withCredentials` + no-rotation + no-
 Plans:
 - [x] 04-01-PLAN.md — Migration (add user_id FK to recipients + backfill + constraint swap) + Recipient model update + shared Zod schemas (D-26) + db:migrate [BLOCKING] (Wave 1, CAMP-01..05, CAMP-08, RECIP-01, RECIP-02 foundation)
 - [x] 04-02-PLAN.md — campaignService.ts (offset list, create, detail, update, delete, computeCampaignStats) + recipientService.ts (upsert, cursor list) (Wave 2, all 8 requirements)
-- [ ] 04-03-PLAN.md — routes/campaigns.ts (replace stub, 6 handlers) + routes/recipients.ts (replace stub, 2 handlers) + docs/DECISIONS.md append (Wave 3, all 8 requirements)
+- [x] 04-03-PLAN.md — routes/campaigns.ts (replace stub, 6 handlers) + routes/recipients.ts (replace stub, 2 handlers) + docs/DECISIONS.md append (Wave 3, all 8 requirements)
 - [ ] 04-04-PLAN.md — 8 smoke scripts + run-all-phase4.sh + update run-all.sh (Wave 4, phase acceptance gate)
 
 Context: Guards C1 (N+1 — use nested `include` for recipient detail, single aggregate for stats), C10 (status guard at service layer, not controllers — use 409 not 400), C16 (cursor bugs — applies to `GET /recipients` only; `GET /campaigns` uses offset — `(created_at, id)` tiebreaker, `Sequelize.literal` with `replacements` not string interpolation, `isNaN` validation on decoded cursor, ownership via `req.user.id` not cursor payload), M3 (stats division-by-zero — `NULLIF` + `ROUND(…, 2)`), m5 (`nextCursor: null` + `hasMore: false` explicitly on last page — recipients only). Note: `GET /campaigns` uses offset pagination (page-number UI, user override of CLAUDE.md §5) — see docs/DECISIONS.md for rationale.
@@ -215,7 +215,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6 → 7 → 8 →
 | 1. Monorepo Foundation & Shared Schemas | 4/4 | Complete | 2026-04-20 |
 | 2. Schema, Migrations & Seed | 4/4 | Complete   | 2026-04-20 |
 | 3. Authentication | 4/4 | Complete | 2026-04-21 |
-| 4. Campaigns & Recipients CRUD | 1/4 | In Progress | - |
+| 4. Campaigns & Recipients CRUD | 3/4 | In Progress | - |
 | 5. Async Send Queue (Schedule + Send) | 0/TBD | Not started | - |
 | 6. Open Tracking Pixel | 0/TBD | Not started | - |
 | 7. Backend Tests | 0/TBD | Not started | - |

@@ -3,9 +3,9 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: executing
-stopped_at: Phase 4 Plan 02 complete — campaignService.ts + recipientService.ts. Ready for Plan 04-03 (campaign + recipient routes).
-last_updated: "2026-04-21T10:57:14Z"
-last_activity: 2026-04-21 -- Phase 4 Plan 02 executed: campaignService (6 exports, offset pagination, stats SQL, atomic guards) + recipientService (upsertRecipient COALESCE, cursor pagination) (2 tasks, 2 commits: 0d6c6c2, 2376cf1)
+stopped_at: Phase 4 Plan 03 complete — routes/campaigns.ts + routes/recipients.ts + DECISIONS.md. Ready for Plan 04-04 (smoke scripts acceptance gate).
+last_updated: "2026-04-21T11:01:42Z"
+last_activity: 2026-04-21 -- Phase 4 Plan 03 executed: campaigns.ts (6 handlers, offset pagination) + recipients.ts (2 handlers, cursor pagination) + DECISIONS.md (2 sections appended) (2 tasks, 2 commits: f305d3a, d583fe0)
 progress:
   total_phases: 10
   completed_phases: 3
@@ -26,12 +26,12 @@ See: .planning/PROJECT.md (updated 2026-04-20)
 ## Current Position
 
 Phase: 3 (Authentication) — COMPLETE (4/4 plans executed)
-Phase: 4 (Campaigns & Recipients CRUD) — IN PROGRESS (2/4 plans executed)
-Plan: 04-03 (campaign + recipient routes) — NEXT
-Status: Plan 04-02 complete (2 tasks, 2 commits: 0d6c6c2, 2376cf1)
-Last activity: 2026-04-21 -- Plan 04-02 executed (campaignService 6 exports + recipientService cursor pagination)
+Phase: 4 (Campaigns & Recipients CRUD) — IN PROGRESS (3/4 plans executed)
+Plan: 04-04 (smoke scripts acceptance gate) — NEXT
+Status: Plan 04-03 complete (2 tasks, 2 commits: f305d3a, d583fe0)
+Last activity: 2026-04-21 -- Plan 04-03 executed (campaigns.ts 6 handlers + recipients.ts 2 handlers + DECISIONS.md appended)
 
-Progress: [███░░░░░░░] 32%  (13/51 v1 REQ-IDs done ≈ 25%; 14/16 plans committed [4 phase-1 + 2 phase-2 + 4/4 phase-3 + 2/4 phase-4])
+Progress: [███░░░░░░░] 33%  (13/51 v1 REQ-IDs done ≈ 25%; 15/16 plans committed [4 phase-1 + 4 phase-2 + 4/4 phase-3 + 3/4 phase-4])
 
 ## Performance Metrics
 
@@ -104,6 +104,8 @@ Recent structural decisions affecting current work:
 - Plan 04-02: deleteCampaign wraps findOne + Campaign.update guard + Campaign.destroy in single sequelize.transaction() — prevents TOCTOU race between ownership check and destroy (C11)
 - Plan 04-02: computeCampaignStats opts.transaction passed via spread `...(opts.transaction ? { transaction: opts.transaction } : {})` — Sequelize exactOptionalPropertyTypes requires Transaction | null, not Transaction | undefined
 - Plan 04-02: cursor array access `data[data.length - 1]` extracted to `const lastItem` with null guard — exactOptionalPropertyTypes flags array index returns as T | undefined requiring explicit narrowing
+- Plan 04-03: GET /:id/stats reuses getCampaignDetail (ownership + stats in one call) — no duplicate ownership check, T-04-03-03 mitigation
+- Plan 04-03: DECISIONS.md appended with Per-User Recipients (composite constraint AUTH-07 alignment) + Campaign List Pagination offset-over-cursor rationale
 
 ### Pending Todos
 
@@ -123,5 +125,5 @@ None yet.
 ## Session Continuity
 
 Last session: 2026-04-21
-Stopped at: Phase 4 Plan 02 complete — campaignService + recipientService service layer. Ready for 04-03 (routes).
-Resume file: .planning/phases/04-campaigns-recipients-crud/04-03-PLAN.md
+Stopped at: Phase 4 Plan 03 complete — campaigns.ts + recipients.ts routes + DECISIONS.md. Ready for 04-04 (smoke acceptance gate).
+Resume file: .planning/phases/04-campaigns-recipients-crud/04-04-PLAN.md
