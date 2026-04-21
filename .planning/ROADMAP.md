@@ -118,7 +118,13 @@ Context: Guards C1 (N+1 — use nested `include` for recipient detail, single ag
   3. The BullMQ worker processes a job inside a single Sequelize transaction: fetches pending recipients, randomly marks each `sent` (with `sent_at = NOW()`) or `failed`, then transitions the campaign to `sent` — all or nothing
   4. BullMQ Queue and Worker use **separate IORedis instances**, both with `maxRetriesPerRequest: null`; `worker.on('failed')` and `worker.on('error')` handlers log via pino
   5. A delayed scheduled job that fires after the campaign was edited or deleted (worker re-checks status and bails if no longer `sending`) does not mutate recipient rows or re-transition status
-**Plans**: TBD
+**Plans**: 4 plans
+
+Plans:
+- [ ] 05-01-PLAN.md — Install bullmq + create lib/queue.ts (Queue+Worker+2 IORedis instances) + services/sendWorker.ts (processSendJob processor) (Wave 1, QUEUE-01/02/03/04)
+- [ ] 05-02-PLAN.md — Add triggerSend()+scheduleCampaign() to campaignService.ts + ScheduleCampaignSchema to shared (Wave 2, CAMP-06/07)
+- [ ] 05-03-PLAN.md — Add POST /:id/send + POST /:id/schedule handlers to campaigns router + extend index.ts shutdown (Wave 3, CAMP-06/07)
+- [ ] 05-04-PLAN.md — Smoke scripts: camp-06-schedule.sh, camp-07-send.sh, camp-07-concurrent-send.sh, camp-worker-wait.sh + run-all-phase5.sh + update run-all.sh (Wave 4, phase acceptance gate)
 
 Context: Guards C4 (stuck-active — never swallow processor errors; let BullMQ mark `failed`), C5 (`maxRetriesPerRequest: null` on every IORedis connection — without it, jobs silently hang under load), C9 (transaction-wrapped simulation — partial state on crash is unrecoverable otherwise), C11 (atomic guard race — `UPDATE … WHERE status IN (...)` returns `rowCount` which is the lock; double-click yields 202 + 409 deterministically).
 
@@ -216,7 +222,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6 → 7 → 8 →
 | 2. Schema, Migrations & Seed | 4/4 | Complete   | 2026-04-20 |
 | 3. Authentication | 4/4 | Complete | 2026-04-21 |
 | 4. Campaigns & Recipients CRUD | 4/4 | Complete | 2026-04-21 |
-| 5. Async Send Queue (Schedule + Send) | 0/TBD | Not started | - |
+| 5. Async Send Queue (Schedule + Send) | 0/4 | Planned | - |
 | 6. Open Tracking Pixel | 0/TBD | Not started | - |
 | 7. Backend Tests | 0/TBD | Not started | - |
 | 8. Frontend Foundation | 0/TBD | Not started | - |
@@ -225,4 +231,4 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6 → 7 → 8 →
 
 ---
 *Roadmap created: 2026-04-20*
-*Last updated: 2026-04-21 — Phase 4 planned (4 plans, 4 waves)*
+*Last updated: 2026-04-21 — Phase 5 planned (4 plans, 4 waves)*
