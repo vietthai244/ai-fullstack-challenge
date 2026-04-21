@@ -23,25 +23,13 @@ cp .env.example .env
 # 3. Start the full stack
 docker compose up --build
 
-# 4. Seed demo data (in a second terminal)
-docker compose exec api yarn db:seed
-
-# 5. Open in browser
+# 4. Open in browser
 open http://localhost:8080
 ```
 
 Everything runs on a single port. No CORS. No manual API URL configuration.
 
-### Demo credentials
-
-After running `docker compose exec api yarn db:seed`:
-
-| Field    | Value              |
-|----------|--------------------|
-| Email    | demo@example.com   |
-| Password | demo1234           |
-
-The seed creates 1 user, 10 recipients, and 3 campaigns (draft / scheduled / sent).
+Visit `http://localhost:8080/register` to create your account, then log in.
 
 ## Environment Variables
 

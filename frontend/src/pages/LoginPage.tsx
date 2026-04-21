@@ -89,9 +89,14 @@ export function LoginPage(): React.ReactElement {
               </div>
               {loginMutation.isError && (
                 <p className="text-destructive text-sm">
-                  {loginMutation.error instanceof Error
-                    ? loginMutation.error.message
-                    : 'Invalid credentials'}
+                  {(() => {
+                    const err = loginMutation.error as import('axios').AxiosError<{
+                      error?: { message?: string };
+                    }>;
+                    return err?.response?.data?.error?.message === 'INVALID_CREDENTIALS'
+                      ? 'Invalid email or password.'
+                      : 'Something went wrong. Please try again.';
+                  })()}
                 </p>
               )}
               <Button
