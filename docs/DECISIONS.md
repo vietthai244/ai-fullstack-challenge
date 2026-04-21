@@ -91,3 +91,11 @@ no page-jump requirement and the cursor is the safer default for large unbounded
 **References:**
 - CLAUDE.md §5 (constraint being overridden for this endpoint)
 - 04-CONTEXT.md D-16..D-21 (updated pagination decisions)
+
+## Per-User Recipients (Phase 4)
+
+Recipients are scoped to the creating user (`recipients.user_id` FK, `UNIQUE(user_id, email)` composite constraint) rather than a global email registry. This aligns with AUTH-07's cross-user-404 enumeration defense and enables multi-user correctness: user A's campaign cannot accidentally be linked to user B's recipient records. A new migration (`20260421000001-add-user-id-to-recipients.cjs`) backfills existing seed rows to the demo user via `SELECT MIN(id) FROM users` and swaps the global `UNIQUE(email)` constraint for the composite one.
+
+## Campaign List Pagination: Offset over Cursor (Phase 4)
+
+`GET /campaigns` uses offset pagination (`?page=1&limit=20`) rather than the cursor-based `(created_at, id)` approach used for `GET /recipients`. Rationale: the campaign list requires page-number UI (jump to page N, show "Page 3 of 12") which cursor pagination cannot support. The consistency risk of offset is acceptable here because the campaign count per user is small (< 1000 for any realistic v1 user), inserts during pagination are infrequent, and the UX value of numbered pages outweighs cursor consistency guarantees. `GET /recipients` retains cursor pagination because recipient lists can be large and are consumed programmatically (no page-jump UI).
