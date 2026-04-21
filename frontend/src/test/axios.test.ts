@@ -110,10 +110,10 @@ describe('apiClient interceptor', () => {
       throw new Error('Response interceptor not registered');
     }
 
-    await responseInterceptorRejected({
+    await (responseInterceptorRejected({
       response: { status: 401 },
       config: { headers: {}, _retry: false },
-    }).catch(() => {});
+    }) as Promise<unknown>).catch(() => {});
 
     expect(mockStore.dispatch).toHaveBeenCalledWith(
       expect.objectContaining({ type: 'auth/clearAuth' }),
