@@ -9,10 +9,11 @@
 //   - computeCampaignStats: single COUNT(*) FILTER aggregate SQL — no JS counting (CLAUDE.md §3)
 //   - upsertRecipientsByEmail (private): ON CONFLICT DO UPDATE SET email = EXCLUDED.email RETURNING id (D-15)
 
-import { QueryTypes } from 'sequelize';
+import { QueryTypes, Op } from 'sequelize';
 import { sequelize, Campaign, Recipient, CampaignRecipient } from '../db/index.js';
-import { ConflictError, NotFoundError } from '../util/errors.js';
+import { ConflictError, NotFoundError, BadRequestError } from '../util/errors.js';
 import type { Transaction } from 'sequelize';
+import { sendQueue } from '../lib/queue.js';
 import type { CreateCampaignInput, UpdateCampaignInput, Stats } from '@campaign/shared';
 
 // ---------------------------------------------------------------------------
@@ -283,4 +284,54 @@ export async function computeCampaignStats(
     open_rate: r.open_rate !== null ? parseFloat(r.open_rate) : null,
     send_rate: r.send_rate !== null ? parseFloat(r.send_rate) : null,
   };
+}
+
+// ---------------------------------------------------------------------------
+// triggerSend — atomic guard + immediate enqueue (CAMP-07, C11)
+// UPDATE WHERE status IN ('draft','scheduled') is the lock — rowCount=0 → 409.
+// No findOne before UPDATE — that would be a TOCTOU race (C11).
+// AUTH-07: createdBy: userId ensures users can only send their own campaigns.
+// ---------------------------------------------------------------------------
+export async function triggerSend(campaignId: number, userId: number): Promise<void> {
+  const [count] = await Campaign.update(
+    { status: 'sending' },
+    {
+      where: {
+        id: campaignId,
+        createdBy: userId,
+        status: { [Op.in]: ['draft', 'scheduled'] },
+      },
+    },
+  );
+  if (count === 0) throw new ConflictError('CAMPAIGN_NOT_SENDABLE');
+  await sendQueue.add('send-campaign', { campaignId, userId });
+}
+
+// ---------------------------------------------------------------------------
+// scheduleCampaign — validate future date + transition draft→scheduled + delayed enqueue (CAMP-06)
+// Business rule: past scheduled_at → 400 (service layer, not Zod, so error code is explicit).
+// AUTH-07: createdBy: userId in WHERE ensures users can only schedule their own campaigns.
+// ---------------------------------------------------------------------------
+export async function scheduleCampaign(
+  campaignId: number,
+  userId: number,
+  scheduledAt: string,
+): Promise<void> {
+  const scheduledDate = new Date(scheduledAt);
+  if (scheduledDate <= new Date()) throw new BadRequestError('SCHEDULED_AT_NOT_FUTURE');
+
+  const [count] = await Campaign.update(
+    { status: 'scheduled', scheduledAt: scheduledDate },
+    {
+      where: {
+        id: campaignId,
+        createdBy: userId,
+        status: 'draft',
+      },
+    },
+  );
+  if (count === 0) throw new ConflictError('CAMPAIGN_NOT_SCHEDULABLE');
+
+  const delay = scheduledDate.getTime() - Date.now();
+  await sendQueue.add('send-campaign', { campaignId, userId }, { delay });
 }
