@@ -3,9 +3,9 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: executing
-stopped_at: Phase 3 VERIFIED + all code review fixes applied (5/5) + HUMAN-UAT approved by user. Ready for Phase 4 (Campaigns & Recipients CRUD) — start with /gsd-discuss-phase 4.
-last_updated: "2026-04-21T10:05:00Z"
-last_activity: 2026-04-21 -- Phase 3 closed: 4/4 plans + review (2 crit+3 warn fixed) + verification passed (22/22 static, 4 HUMAN-UAT items saved for Docker run)
+stopped_at: Phase 4 Plan 01 complete — migration + Recipient model userId + D-26 Zod schemas. Ready for Plan 04-02 (campaignService + recipientService).
+last_updated: "2026-04-21T12:00:00Z"
+last_activity: 2026-04-21 -- Phase 4 Plan 01 executed: user_id FK migration, Recipient model, shared Zod schemas (2 tasks, 2 commits: 056fb77, 7a9513a)
 progress:
   total_phases: 10
   completed_phases: 3
@@ -26,12 +26,12 @@ See: .planning/PROJECT.md (updated 2026-04-20)
 ## Current Position
 
 Phase: 3 (Authentication) — COMPLETE (4/4 plans executed)
-Phase: 4 (Campaigns & Recipients CRUD) — NEXT
-Plan: next is Phase 4 (plan structure TBD)
-Status: Plan 03-04 complete (4/4 tasks, 4 commits: 0f315f8, 5f0b478, 040f915, 2bfdfe4)
-Last activity: 2026-04-21 -- Plan 03-04 executed (authenticate middleware + buildApp + smoke harness + DECISIONS.md)
+Phase: 4 (Campaigns & Recipients CRUD) — IN PROGRESS (1/4 plans executed)
+Plan: 04-02 (campaignService + recipientService) — NEXT
+Status: Plan 04-01 complete (2 tasks, 2 commits: 056fb77, 7a9513a)
+Last activity: 2026-04-21 -- Plan 04-01 executed (user_id FK migration + Recipient model userId + D-26 Zod schemas)
 
-Progress: [███░░░░░░░] 30%  (13/51 v1 REQ-IDs done ≈ 25%; 12/12 plans committed [4 phase-1 + 2 phase-2 + 4/4 phase-3] ≈ 100% planned coverage for Phase 3)
+Progress: [███░░░░░░░] 30%  (13/51 v1 REQ-IDs done ≈ 25%; 13/16 plans committed [4 phase-1 + 2 phase-2 + 4/4 phase-3 + 1/4 phase-4])
 
 ## Performance Metrics
 
@@ -97,6 +97,9 @@ Recent structural decisions affecting current work:
 - Plan 03-04: BIGINT PKs returned as string by Postgres/Sequelize — smoke jq checks accept string|number
 - Plan 03-04: ESLint argsIgnorePattern '^_' added for backend files — honors _next convention in errorHandler
 - Plan 03-04: Phase 3 acceptance gate (structural grep + live curl) all green; smoke suite passed all 7 AUTH-NN
+- Plan 04-01: Migration adds user_id nullable first, backfills to MIN(users.id), then enforces NOT NULL — standard nullable-add-then-backfill-then-constraint pattern for adding FK to populated table
+- Plan 04-01: inline unique:true removed from Recipient.email column definition — composite UNIQUE(user_id, email) enforced by DB constraint only; Sequelize inline unique would create a conflicting separate constraint
+- Plan 04-01: shared/dist is gitignored — dist rebuild verified locally but not committed; consumers run build at install time
 
 ### Pending Todos
 
