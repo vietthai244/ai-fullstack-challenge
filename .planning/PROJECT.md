@@ -30,36 +30,36 @@ If everything else slips, the API must still enforce the spec's state transition
 
 **Backend**
 
-- [ ] `/campaigns` CRUD with status-gated edit/delete (only when `draft`)
+- [x] `/campaigns` CRUD with status-gated edit/delete (only when `draft`) *(Phase 4)*
 - [x] `/campaigns/:id/schedule` (scheduled_at must be future) *(Phase 5)*
 - [x] `/campaigns/:id/send` enqueues a BullMQ job; worker randomly marks recipients `sent` or `failed`; campaign transitions draft/scheduled → sending → sent *(Phase 5)*
-- [ ] `/campaigns/:id/stats` returns total/sent/failed/opened/open_rate/send_rate
-- [ ] `/recipients` GET + POST
-- [ ] `GET /track/open/:campaignRecipientId` — 1×1 pixel that records `opened_at`
-- [ ] Cursor-based pagination on `GET /campaigns` (created_at DESC + id tiebreaker)
-- [ ] Zod input validation (shared schemas package)
-- [ ] Indexes with explainable rationale (FKs, campaigns.status, campaigns.scheduled_at, campaign_recipients.campaign_id)
+- [x] `/campaigns/:id/stats` returns total/sent/failed/opened/open_rate/send_rate *(Phase 4)*
+- [x] `/recipients` GET + POST *(Phase 4)*
+- [x] `GET /track/open/:campaignRecipientId` — 1×1 pixel that records `opened_at` *(Phase 6)*
+- [x] Cursor-based pagination on `GET /recipients`; offset pagination on `GET /campaigns` *(Phase 4)*
+- [x] Zod input validation (shared schemas package) *(Phase 1)*
+- [x] Indexes with explainable rationale (FKs, campaigns.status, campaigns.scheduled_at, campaign_recipients.campaign_id) *(Phase 2)*
 - [x] Vitest + Supertest: status-guard, send-atomicity, stats aggregation, auth boundary tests *(Phase 7)*
 
 **Frontend**
 
-- [ ] `/login` page with httpOnly refresh + in-memory access token
-- [ ] `/campaigns` list with status badges, cursor pagination, skeleton loaders
-- [ ] `/campaigns/new` form (name, subject, body, recipient emails)
-- [ ] `/campaigns/:id` detail: stats (progress bars for open_rate / send_rate), recipient list, conditional Schedule/Send/Delete buttons
+- [x] `/login` page with httpOnly refresh + in-memory access token *(Phase 9)*
+- [x] `/campaigns` list with status badges, cursor pagination, skeleton loaders *(Phase 9)*
+- [x] `/campaigns/new` form (name, subject, body, recipient emails) *(Phase 9)*
+- [x] `/campaigns/:id` detail: stats (progress bars for open_rate / send_rate), recipient list, conditional Schedule/Send/Delete buttons *(Phase 9)*
 - [x] Redux Toolkit for auth/UI state; React Query for server state *(Phase 8)*
 - [x] shadcn/ui + Tailwind components *(Phase 8)*
-- [ ] Status badges: draft=grey, scheduled=blue, sending=amber, sent=green
-- [ ] Error and loading states across all pages
-- [ ] Vitest + @testing-library/react for 1–2 key component tests
+- [x] Status badges: draft=grey, scheduled=blue, sending=amber, sent=green *(Phase 9)*
+- [x] Error and loading states across all pages *(Phase 9)*
+- [x] Vitest + @testing-library/react for 1–2 key component tests *(Phase 9)*
 
 **Ops / DX**
 
-- [ ] `docker compose up` brings up **full stack**: Postgres, Redis, API container, and web container (nginx serving the compiled Vite build)
-- [ ] nginx in the web container reverse-proxies `/api/*` and `/track/*` to the API container — single origin for the browser, no CORS headaches, no build-time `VITE_API_URL` baked in
-- [ ] Developer iteration: README documents optional `yarn workspace @campaign/frontend dev` for HMR against the dockerized API
-- [ ] Seed data + demo login in README
-- [ ] README includes "How I Used Claude Code" section (real prompts, corrections, what was out-of-bounds, authored with live evidence captured during build)
+- [x] `docker compose up` brings up **full stack**: Postgres, Redis, API container, and web container (nginx serving the compiled Vite build) *(Phase 10)*
+- [x] nginx in the web container reverse-proxies `/api/*` and `/track/*` to the API container — single origin for the browser, no CORS headaches, no build-time `VITE_API_URL` baked in *(Phase 10)*
+- [x] Developer iteration: README documents optional `yarn workspace @campaign/frontend dev` for HMR against the dockerized API *(Phase 10)*
+- [x] Seed data + demo login in README *(Phase 10)*
+- [x] README includes "How I Used Claude Code" section (real prompts, corrections, what was out-of-bounds, authored with live evidence captured during build) *(Phase 10)*
 - [ ] Public GitHub repo + walkthrough summary
 
 ### Out of Scope
@@ -107,19 +107,19 @@ If everything else slips, the API must still enforce the spec's state transition
 
 | Decision | Rationale | Outcome |
 |----------|-----------|---------|
-| Use `.docs/requirements.md` v2 as source of truth | v2 adds `sending` status, `/recipients` endpoints, Sequelize, Vite, monorepo — supersedes v1 | — Pending |
-| Redux Toolkit + React Query (not Zustand-only) | Clear separation: Redux for client/UI/auth state, React Query for server cache. Signals senior SoC judgment at small extra cost | — Pending |
-| BullMQ + Redis for async send simulation | "Simulate asynchronous" → real job queue is the senior read. Shows production instinct vs setTimeout | — Pending |
-| JWT: in-memory access + httpOnly refresh | XSS-safe refresh, short-lived access; textbook senior auth pattern | — Pending |
-| shadcn/ui + Tailwind | Modern, taste signal, lean bundle, copy-in components pair with Vite | — Pending |
-| GET `/track/open/:campaignRecipientId` pixel endpoint | Spec has `opened_at` + `open_rate` but no open endpoint — pixel matches real ESP mental model and is demoable via `curl` | — Pending |
-| Zod validation with shared schemas workspace | Single source of truth for types; validates at API boundary; frontend reuses types | — Pending |
-| Flat monorepo: `backend/` + `frontend/` + `shared/` | Matches doc v2 wording; yarn workspaces still enables shared types | — Pending |
-| Vitest on both sides + Supertest + RTL | Unified runner; faster ESM; strong TS ergonomics | — Pending |
-| docker-compose scope = full stack (postgres + redis + api + web as nginx-served static) | True one-command setup for the reviewer; nginx proxies `/api/*` + `/track/*` → single origin (no CORS) and no build-time `VITE_API_URL`; dev-time HMR preserved via optional `yarn workspace @campaign/frontend dev` against the dockerized API | — Pending |
-| Cursor pagination on `/campaigns` | Senior flex over offset; (created_at DESC, id) cursor is simple enough to justify | — Pending |
-| Sequelize CLI migrations | Matches "PostgreSQL with Sequelize" spec; standard tooling | — Pending |
-| Log AI collaboration as we build | Authenticity for README section; reconstruction from memory is weaker | — Pending |
+| Use `.docs/requirements.md` v2 as source of truth | v2 adds `sending` status, `/recipients` endpoints, Sequelize, Vite, monorepo — supersedes v1 | — Implemented |
+| Redux Toolkit + React Query (not Zustand-only) | Clear separation: Redux for client/UI/auth state, React Query for server cache. Signals senior SoC judgment at small extra cost | — Implemented |
+| BullMQ + Redis for async send simulation | "Simulate asynchronous" → real job queue is the senior read. Shows production instinct vs setTimeout | — Implemented |
+| JWT: in-memory access + httpOnly refresh | XSS-safe refresh, short-lived access; textbook senior auth pattern | — Implemented |
+| shadcn/ui + Tailwind | Modern, taste signal, lean bundle, copy-in components pair with Vite | — Implemented |
+| GET `/track/open/:campaignRecipientId` pixel endpoint | Spec has `opened_at` + `open_rate` but no open endpoint — pixel matches real ESP mental model and is demoable via `curl` | — Implemented |
+| Zod validation with shared schemas workspace | Single source of truth for types; validates at API boundary; frontend reuses types | — Implemented |
+| Flat monorepo: `backend/` + `frontend/` + `shared/` | Matches doc v2 wording; yarn workspaces still enables shared types | — Implemented |
+| Vitest on both sides + Supertest + RTL | Unified runner; faster ESM; strong TS ergonomics | — Implemented |
+| docker-compose scope = full stack (postgres + redis + api + web as nginx-served static) | True one-command setup for the reviewer; nginx proxies `/api/*` + `/track/*` → single origin (no CORS) and no build-time `VITE_API_URL`; dev-time HMR preserved via optional `yarn workspace @campaign/frontend dev` against the dockerized API | — Implemented |
+| Cursor pagination on `/campaigns` | Senior flex over offset; (created_at DESC, id) cursor is simple enough to justify | — Implemented |
+| Sequelize CLI migrations | Matches "PostgreSQL with Sequelize" spec; standard tooling | — Implemented |
+| Log AI collaboration as we build | Authenticity for README section; reconstruction from memory is weaker | — Implemented |
 
 ## Evolution
 

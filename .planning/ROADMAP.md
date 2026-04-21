@@ -24,7 +24,7 @@ Critical path: Phases 1 → 2 → 3 → 4 → 5 are strictly sequential (each un
 - [x] **Phase 9: Frontend Pages & Actions** - Login, campaigns list (infinite scroll), new-campaign form, detail page with polling + Schedule/Send/Delete/Logout actions + CampaignBadge test (completed 2026-04-22)
 - [x] **Phase 10: Full Docker Stack, Integration & Docs** - Full `docker compose up` (postgres+redis+api+nginx-served web), README with demo login + "How I Used Claude Code", `docs/DECISIONS.md`
 - [x] **Phase 10.1: UAT Fixes — Auth, Navigation & Register** (INSERTED) - Login button loading bug, auth persistence on reload, auth guard redirect, page navigation, /register route with login↔register nav (completed 2026-04-22)
-- [ ] **Phase 10.2: Send/Delete Bug Fixes & UX Polish** (INSERTED) - Send button stuck in forever-pending (status stays "sending"), delete draft 409 conflict, recipients space-key input, meaningful toast messages, editable recipients on draft
+- [x] **Phase 10.2: Send/Delete Bug Fixes & UX Polish** (INSERTED) - Send button stuck in forever-pending (status stays "sending"), delete draft 409 conflict, recipients space-key input, meaningful toast messages, editable recipients on draft (completed 2026-04-22)
 
 ## Phase Details
 
@@ -246,10 +246,12 @@ Plans:
   3. Recipients tag input accepts new entries on Space key in addition to blur/Enter
   4. All mutation success/error toasts show human-readable messages (not raw error codes)
   5. Recipients on a draft campaign can be added/removed inline without leaving the detail page
-**Plans**: TBD — to be planned via /gsd-plan-phase 10.2
+**Plans**: 3 plans
 
 Plans:
-(none yet)
+- [x] 10.2-01-backend-guard-fix.md — Fix Sequelize updatedAt guard bug in sendWorker + deleteCampaign (Wave 1, UI-08/UI-09)
+- [x] 10.2-02-email-tokenizer-editable-recipients.md — Extract EmailTokenizer + space key + editable recipients on draft (Wave 1, UI-08/UI-10)
+- [x] 10.2-03-toast-messages.md — Add toast.success to all mutation onSuccess handlers (Wave 1, UI-08/UI-09/UI-10)
 
 ---
 
@@ -286,13 +288,13 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6 → 7 → 8 →
 | 3. Authentication | 4/4 | Complete | 2026-04-21 |
 | 4. Campaigns & Recipients CRUD | 4/4 | Complete | 2026-04-21 |
 | 5. Async Send Queue (Schedule + Send) | 4/4 | Complete | 2026-04-21 |
-| 6. Open Tracking Pixel | 0/1 | Planned | - |
-| 7. Backend Tests | 0/2 | Planned | - |
+| 6. Open Tracking Pixel | 1/1 | Complete | 2026-04-21 |
+| 7. Backend Tests | 2/2 | Complete | 2026-04-21 |
 | 8. Frontend Foundation | 3/3 | Complete | 2026-04-21 |
 | 9. Frontend Pages & Actions | 5/5 | Complete | 2026-04-22 |
 | 10. Full Docker Stack, Integration & Docs | 4/4 | Complete | 2026-04-22 |
 | 10.1. UAT Fixes — Auth, Navigation & Register (INSERTED) | 3/3 | Complete | 2026-04-22 |
-| 10.2. Send/Delete Bug Fixes & UX Polish (INSERTED) | 0/0 | Not started | - |
+| 10.2. Send/Delete Bug Fixes & UX Polish (INSERTED) | 3/3 | Complete | 2026-04-22 |
 
 ---
 *Roadmap created: 2026-04-20*
