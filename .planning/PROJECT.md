@@ -31,8 +31,8 @@ If everything else slips, the API must still enforce the spec's state transition
 **Backend**
 
 - [ ] `/campaigns` CRUD with status-gated edit/delete (only when `draft`)
-- [ ] `/campaigns/:id/schedule` (scheduled_at must be future)
-- [ ] `/campaigns/:id/send` enqueues a BullMQ job; worker randomly marks recipients `sent` or `failed`; campaign transitions draft/scheduled → sending → sent
+- [x] `/campaigns/:id/schedule` (scheduled_at must be future) *(Phase 5)*
+- [x] `/campaigns/:id/send` enqueues a BullMQ job; worker randomly marks recipients `sent` or `failed`; campaign transitions draft/scheduled → sending → sent *(Phase 5)*
 - [ ] `/campaigns/:id/stats` returns total/sent/failed/opened/open_rate/send_rate
 - [ ] `/recipients` GET + POST
 - [ ] `GET /track/open/:campaignRecipientId` — 1×1 pixel that records `opened_at`
@@ -139,4 +139,4 @@ This document evolves at phase transitions and milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-04-21 after Phase 3 (Authentication) — split-token JWT + Redis denylist + authenticate middleware shipped*
+*Last updated: 2026-04-21 after Phase 5 (Async Send Queue) — BullMQ queue+worker, atomic send guard, schedule+send routes shipped*

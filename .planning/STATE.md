@@ -3,43 +3,42 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: executing
-stopped_at: Phase 4 Plan 04 complete — 8 smoke scripts + run-all-phase4.sh + run-all.sh updated. Phase 4 COMPLETE (4/4 plans). Ready for Phase 5.
-last_updated: "2026-04-21T11:05:21Z"
-last_activity: 2026-04-21 -- Phase 4 Plan 04 executed: 8 smoke scripts (CAMP-01..05, CAMP-08, RECIP-01..02) + run-all-phase4.sh orchestrator + run-all.sh updated (2 tasks, 2 commits: d92e8af, fed4688)
+stopped_at: Phase 5 complete — 4/4 plans executed. BullMQ send queue live. Ready for Phase 6 (tracking pixel) or Phase 7 (backend tests).
+last_updated: "2026-04-21T14:00:00Z"
+last_activity: 2026-04-21 -- Phase 5 complete (4/4 plans, CR-01+WR-01-03 fixes applied, typecheck green)
 progress:
   total_phases: 10
-  completed_phases: 3
-  total_plans: 14
-  completed_plans: 14
-  percent: 32
+  completed_phases: 5
+  total_plans: 18
+  completed_plans: 18
+  percent: 50
 ---
 
 # Project State
 
 ## Project Reference
 
-See: .planning/PROJECT.md (updated 2026-04-20)
+See: .planning/PROJECT.md (updated 2026-04-21)
 
 **Core value:** Server-side business-rule correctness and clean, testable architecture — proven by tests and narrated through transparent AI collaboration.
-**Current focus:** Phase 3 CLOSED — ready to discuss/plan Phase 4 (Campaigns & Recipients CRUD with cursor pagination + atomic status guards + single-SQL stats)
+**Current focus:** Phase 5 CLOSED — ready for Phase 6 (tracking pixel, only needs Phase 2) or Phase 7 (backend tests, needs Phases 3-5)
 
 ## Current Position
 
-Phase: 3 (Authentication) — COMPLETE (4/4 plans executed)
-Phase: 4 (Campaigns & Recipients CRUD) — COMPLETE (4/4 plans executed)
-Plan: 05-01 (BullMQ send worker) — NEXT
-Status: Plan 04-04 complete (2 tasks, 2 commits: d92e8af, fed4688)
-Last activity: 2026-04-21 -- Plan 04-04 executed (8 smoke scripts + run-all-phase4.sh + run-all.sh updated)
+Phase: 5 (Async Send Queue) — COMPLETE (4/4 plans executed)
+Plan: 06-01 (tracking pixel) or 07-01 (backend tests) — NEXT
+Status: Phase 5 verified (5/5 must-haves); code review fixes applied (CR-01, WR-01, WR-02, WR-03)
+Last activity: 2026-04-21 -- Phase 5 executed (BullMQ queue lib, service layer, route handlers, smoke scripts + 4 code review fixes)
 
-Progress: [████░░░░░░] 40%  (21/51 v1 REQ-IDs done ≈ 41%; 16/16 plans committed [4 phase-1 + 4 phase-2 + 4/4 phase-3 + 4/4 phase-4])
+Progress: [█████░░░░░] 50%  (27/51 v1 REQ-IDs done ≈ 53%; 18/18 plans committed [4+4+4+4+4])
 
 ## Performance Metrics
 
 **Velocity:**
 
-- Total plans completed: 6
-- Average duration: 5.9min
-- Total execution time: 0.59 hours
+- Total plans completed: 18
+- Average duration: ~4min
+- Total execution time: ~1.2 hours
 
 **By Phase:**
 
@@ -48,11 +47,12 @@ Progress: [████░░░░░░] 40%  (21/51 v1 REQ-IDs done ≈ 41%; 
 | 1     | 4     | 19.6min | 4.9min |
 | 2     | 2     | 16min   | 8min    |
 | 3     | 2/4   | 11.1min | 5.6min  |
+| 5     | 4     | ~16min  | ~4min   |
 
 **Recent Trend:**
 
-- Last 5 plans: 01-02 (5.3min), 01-03 (~8min), 01-04 (3.0min), 02-02 (~10min), 02-03 (6min)
-- Trend: stable; Plan 02-03 was fast because all 6 migration bodies were verbatim from the planner's pre-resolved code samples — execution is "transcribe + verify" with no design re-decisions.
+- Phase 5 plans all completed in ~4min each (worktree-isolated, sequential waves)
+- Trend: stable; code review catch rate improving (4 fixes applied post-wave)
 
 *Updated after each plan completion*
 
@@ -106,6 +106,11 @@ Recent structural decisions affecting current work:
 - Plan 04-02: cursor array access `data[data.length - 1]` extracted to `const lastItem` with null guard — exactOptionalPropertyTypes flags array index returns as T | undefined requiring explicit narrowing
 - Plan 04-03: GET /:id/stats reuses getCampaignDetail (ownership + stats in one call) — no duplicate ownership check, T-04-03-03 mitigation
 - Plan 04-03: DECISIONS.md appended with Per-User Recipients (composite constraint AUTH-07 alignment) + Campaign List Pagination offset-over-cursor rationale
+- Phase 5: BullMQ installed (^5.75.2); bullmq hoisted to root node_modules via Yarn 4 — `yarn install` must use corepack shim, not homebrew classic yarn
+- Phase 5: `shared/dist` rebuild required after adding ScheduleCampaignSchema before backend typecheck passes — `yarn workspace @campaign/shared build` must run before `typecheck`
+- Phase 5: triggerSend + scheduleCampaign wrap sendQueue.add() in try/catch; Redis enqueue failure rolls campaign back to 'draft' then re-throws — no stranded campaigns (CR-01 fix)
+- Phase 5: Worker stale-job guard moved inside transaction as atomic Campaign.update WHERE status='sending' — closes TOCTOU race (C11 variant) and re-verifies ownership in one step (WR-01+WR-02 fix)
+- Phase 5: isNaN guard on parsed scheduledAt before delay arithmetic — invalid date string throws INVALID_SCHEDULED_AT instead of silently becoming immediate job (WR-03 fix)
 
 ### Pending Todos
 
@@ -125,5 +130,5 @@ None yet.
 ## Session Continuity
 
 Last session: 2026-04-21
-Stopped at: Phase 4 complete (4/4 plans). 8 smoke scripts + orchestrators committed. Ready for Phase 5 (BullMQ send worker).
-Resume file: .planning/phases/05-send-worker/
+Stopped at: Phase 5 complete (4/4 plans). BullMQ queue + send worker + route handlers + smoke scripts committed. 4 code review fixes applied. Ready for Phase 6 (tracking pixel) or Phase 7 (backend tests).
+Resume file: .planning/phases/06-tracking-pixel/ or .planning/phases/07-backend-tests/

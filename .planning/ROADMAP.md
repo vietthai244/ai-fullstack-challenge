@@ -17,7 +17,7 @@ Critical path: Phases 1 → 2 → 3 → 4 → 5 are strictly sequential (each un
 - [x] **Phase 2: Schema, Migrations & Seed** - Sequelize models + migrations (4-state enum, FKs, indexes, `tracking_token UUID`, `pgcrypto`) + demo seed (completed 2026-04-20)
 - [x] **Phase 3: Authentication** - Split-token JWT auth (access in memory + refresh in httpOnly cookie), Redis denylist, `/auth/*` endpoints, `authenticate` middleware (completed 2026-04-21)
 - [x] **Phase 4: Campaigns & Recipients CRUD** - `/campaigns` + `/recipients` REST with offset pagination (campaigns) + cursor pagination (recipients), server-side status guards, single-SQL stats aggregate (completed 2026-04-21)
-- [ ] **Phase 5: Async Send Queue (Schedule + Send)** - BullMQ queue+worker, atomic send guard, transaction-wrapped simulation, delayed schedule jobs with re-check on fire
+- [x] **Phase 5: Async Send Queue (Schedule + Send)** - BullMQ queue+worker, atomic send guard, transaction-wrapped simulation, delayed schedule jobs with re-check on fire (completed 2026-04-21)
 - [ ] **Phase 6: Open Tracking Pixel** - Public `GET /track/open/:trackingToken` returns 43-byte GIF + idempotent `opened_at` UPDATE, always-200 (oracle defense)
 - [ ] **Phase 7: Backend Tests** - Vitest + Supertest covering status-guard 409s, concurrent-send atomicity, stats aggregation, auth 401/cross-user 404
 - [ ] **Phase 8: Frontend Foundation** - Vite + React 18 + Tailwind + shadcn + Redux + React Query + axios refresh interceptor + bootstrap + route guard
@@ -121,10 +121,10 @@ Context: Guards C1 (N+1 — use nested `include` for recipient detail, single ag
 **Plans**: 4 plans
 
 Plans:
-- [ ] 05-01-PLAN.md — Install bullmq + create lib/queue.ts (Queue+Worker+2 IORedis instances) + services/sendWorker.ts (processSendJob processor) (Wave 1, QUEUE-01/02/03/04)
-- [ ] 05-02-PLAN.md — Add triggerSend()+scheduleCampaign() to campaignService.ts + ScheduleCampaignSchema to shared (Wave 2, CAMP-06/07)
-- [ ] 05-03-PLAN.md — Add POST /:id/send + POST /:id/schedule handlers to campaigns router + extend index.ts shutdown (Wave 3, CAMP-06/07)
-- [ ] 05-04-PLAN.md — Smoke scripts: camp-06-schedule.sh, camp-07-send.sh, camp-07-concurrent-send.sh, camp-worker-wait.sh + run-all-phase5.sh + update run-all.sh (Wave 4, phase acceptance gate)
+- [x] 05-01-PLAN.md — Install bullmq + create lib/queue.ts (Queue+Worker+2 IORedis instances) + services/sendWorker.ts (processSendJob processor) (Wave 1, QUEUE-01/02/03/04)
+- [x] 05-02-PLAN.md — Add triggerSend()+scheduleCampaign() to campaignService.ts + ScheduleCampaignSchema to shared (Wave 2, CAMP-06/07)
+- [x] 05-03-PLAN.md — Add POST /:id/send + POST /:id/schedule handlers to campaigns router + extend index.ts shutdown (Wave 3, CAMP-06/07)
+- [x] 05-04-PLAN.md — Smoke scripts: camp-06-schedule.sh, camp-07-send.sh, camp-07-concurrent-send.sh, camp-worker-wait.sh + run-all-phase5.sh + update run-all.sh (Wave 4, phase acceptance gate)
 
 Context: Guards C4 (stuck-active — never swallow processor errors; let BullMQ mark `failed`), C5 (`maxRetriesPerRequest: null` on every IORedis connection — without it, jobs silently hang under load), C9 (transaction-wrapped simulation — partial state on crash is unrecoverable otherwise), C11 (atomic guard race — `UPDATE … WHERE status IN (...)` returns `rowCount` which is the lock; double-click yields 202 + 409 deterministically).
 
@@ -222,7 +222,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6 → 7 → 8 →
 | 2. Schema, Migrations & Seed | 4/4 | Complete   | 2026-04-20 |
 | 3. Authentication | 4/4 | Complete | 2026-04-21 |
 | 4. Campaigns & Recipients CRUD | 4/4 | Complete | 2026-04-21 |
-| 5. Async Send Queue (Schedule + Send) | 0/4 | Planned | - |
+| 5. Async Send Queue (Schedule + Send) | 4/4 | Complete | 2026-04-21 |
 | 6. Open Tracking Pixel | 0/TBD | Not started | - |
 | 7. Backend Tests | 0/TBD | Not started | - |
 | 8. Frontend Foundation | 0/TBD | Not started | - |
@@ -231,4 +231,4 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6 → 7 → 8 →
 
 ---
 *Roadmap created: 2026-04-20*
-*Last updated: 2026-04-21 — Phase 5 planned (4 plans, 4 waves)*
+*Last updated: 2026-04-21 — Phase 5 complete (4/4 plans executed)*
