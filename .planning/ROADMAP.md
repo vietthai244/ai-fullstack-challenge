@@ -74,7 +74,13 @@ Context: Guards C3 (migration FK ordering — Users → Recipients → Campaigns
   3. `POST /auth/logout` denylists the current refresh `jti` in Redis with TTL = remaining token life and clears the cookie; a subsequent refresh with the denylisted token returns 401 and clears the cookie
   4. `GET /auth/me` with a valid `Authorization: Bearer` returns the authed user; missing or invalid token returns 401
   5. A request to any `/campaigns/*` or `/recipients/*` route without a bearer token returns 401; with a bearer token for user A accessing user B's campaign returns **404** (not 403)
-**Plans**: TBD
+**Plans**: 4 plans
+
+Plans:
+- [ ] 03-01-PLAN.md — Scaffolding: docker-compose redis + Phase 3 env vars + config/env.ts + lib/redis.ts + util/errors.ts + middleware/{validate,errorHandler}.ts (Wave 1, AUTH-01..07 infra)
+- [ ] 03-02-PLAN.md — Primitives: lib/tokens.ts (HS256 + separate secrets + jti) + services/authService.ts (bcrypt + timing defense) + extended shared/src/schemas/auth.ts (Wave 2, AUTH-01..04)
+- [ ] 03-03-PLAN.md — /auth routes: register/login/refresh/logout/me with COOKIE_OPTS path=/auth + CSRF + rotation + denylist (Wave 3, AUTH-01..05)
+- [ ] 03-04-PLAN.md — authenticate middleware + campaigns/recipients stub routers + buildApp factory + index.ts rewrite + smoke harness + DECISIONS.md note (Wave 4, AUTH-06/07 + phase acceptance gate)
 
 Context: Guards C6 (refresh-race + missing `withCredentials` + no-rotation + no-denylist variants — all handled by rotation + Redis denylist; frontend interceptor is Phase 8), C7 (router-level `authenticate` usage so later-added routes cannot be accidentally unprotected; `/track/*` mounts on a separate public router), m2 (startup-time `JWT_ACCESS_SECRET` + `JWT_REFRESH_SECRET` env check), m6 (separate secrets for access vs refresh), and the AUTH-07 "cross-user = 404 not 403" enumeration-defense convention.
 
@@ -202,7 +208,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6 → 7 → 8 →
 |-------|----------------|--------|-----------|
 | 1. Monorepo Foundation & Shared Schemas | 4/4 | Complete | 2026-04-20 |
 | 2. Schema, Migrations & Seed | 4/4 | Complete   | 2026-04-20 |
-| 3. Authentication | 0/TBD | Not started | - |
+| 3. Authentication | 0/4 | Planned | - |
 | 4. Campaigns & Recipients CRUD | 0/TBD | Not started | - |
 | 5. Async Send Queue (Schedule + Send) | 0/TBD | Not started | - |
 | 6. Open Tracking Pixel | 0/TBD | Not started | - |
