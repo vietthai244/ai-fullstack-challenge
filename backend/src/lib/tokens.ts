@@ -70,11 +70,15 @@ export function signRefresh(user: { id: number | string }): {
       expiresIn: config.REFRESH_TOKEN_TTL,
     } as jwt.SignOptions,
   );
-  // Decode once to surface the `exp` claim for denylist TTL math later.
-  const { exp } = jwt.verify(token, config.JWT_REFRESH_SECRET, {
-    algorithms: ['HS256'],
-  }) as RefreshPayload & { exp: number };
-  return { token, jti, exp };
+  // Decode (no HMAC) to extract exp — token was just signed, no need to
+  // re-verify. Using jwt.verify here was wasteful and semantically wrong
+  // (verify is for untrusted input). Guard exp presence in case
+  // REFRESH_TOKEN_TTL is misconfigured. (WR-03)
+  const decoded = jwt.decode(token) as { exp?: number } | null;
+  if (!decoded?.exp) {
+    throw new Error('signRefresh: token missing exp — check REFRESH_TOKEN_TTL config');
+  }
+  return { token, jti, exp: decoded.exp };
 }
 
 export function verifyRefresh(
