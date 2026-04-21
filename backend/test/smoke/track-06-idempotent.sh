@@ -20,8 +20,8 @@ fi
 curl -sS -o /dev/null "$BASE/track/open/$FRESH_TOKEN"
 
 # Capture opened_at after first open
-FIRST_TS=$(psql "$DATABASE_URL" -t -c \
-  "SELECT opened_at FROM campaign_recipients WHERE tracking_token='$FRESH_TOKEN';" \
+FIRST_TS=$(psql "$DATABASE_URL" -t -v token="$FRESH_TOKEN" \
+  -c "SELECT opened_at FROM campaign_recipients WHERE tracking_token = :'token';" \
   2>/dev/null | xargs)
 if [ -z "$FIRST_TS" ] || [ "$FIRST_TS" = "" ]; then
   echo "FAIL track-06-idempotent: opened_at not set after first open"
@@ -32,8 +32,8 @@ fi
 curl -sS -o /dev/null "$BASE/track/open/$FRESH_TOKEN"
 
 # opened_at must not have changed
-SECOND_TS=$(psql "$DATABASE_URL" -t -c \
-  "SELECT opened_at FROM campaign_recipients WHERE tracking_token='$FRESH_TOKEN';" \
+SECOND_TS=$(psql "$DATABASE_URL" -t -v token="$FRESH_TOKEN" \
+  -c "SELECT opened_at FROM campaign_recipients WHERE tracking_token = :'token';" \
   2>/dev/null | xargs)
 
 if [ "$FIRST_TS" != "$SECOND_TS" ]; then
