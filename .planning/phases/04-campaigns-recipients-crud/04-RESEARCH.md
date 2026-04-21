@@ -58,7 +58,7 @@
 
 | ID | Description | Research Support |
 |----|-------------|------------------|
-| CAMP-01 | `GET /campaigns` cursor pagination — `{data, nextCursor, hasMore}`, opaque cursor encodes `(created_at,id)` | Sequelize.literal + replacements pattern verified; C16 pitfall coverage documented |
+| CAMP-01 | `GET /campaigns` **offset** pagination — `{data, pagination: {page,limit,total,totalPages}}`, query params `?page=1&limit=20` (D-16..D-21; overrides CLAUDE.md §5 for campaigns only — see docs/DECISIONS.md) | findAndCountAll + offset(page-1)*limit pattern; OffsetPageQuerySchema coerces/validates page+limit |
 | CAMP-02 | `POST /campaigns` — draft, upsert recipients, CampaignRecipient rows in pending inside tx | ON CONFLICT upsert pattern + sequelize.transaction verified |
 | CAMP-03 | `GET /campaigns/:id` — eager-loaded recipients (no N+1) + inline stats | nested include chain pattern verified; C1 prevention documented |
 | CAMP-04 | `PATCH /campaigns/:id` — 409 if status ≠ draft (atomic guard) | atomic UPDATE ... RETURNING pattern verified |
@@ -766,17 +766,13 @@ export const CreateRecipientSchema = z.object({
 
 ---
 
-## Open Questions
+## Open Questions (RESOLVED)
 
-1. **Cursor decode with `Sequelize.literal` + `replacements` placement**
-   - What we know: `replacements` can be passed directly to `Model.findAll(options)` alongside a `Sequelize.literal` in the `where` clause.
-   - What's unclear: Whether `replacements` at the `findAll` level is distinct from `replacements` needed for raw queries vs. whether they conflict when both are used.
-   - Recommendation: Use the pattern from Pattern 1 (literal in `Op.and`, `replacements` on the findAll options). This is the documented path [VERIFIED: Context7 Sequelize raw queries]. If type errors appear, fall back to a raw `sequelize.query` for the paginated list.
+1. **Cursor decode with `Sequelize.literal` + `replacements` placement** *(RESOLVED)*
+   - Resolution: Applies to `GET /recipients` cursor pagination only. `GET /campaigns` uses offset pagination (D-16..D-21) — no `Sequelize.literal` cursor involved for campaigns. For `recipientService.listRecipients`, use `replacements` on the `findAll` options object alongside `Op.and: [Sequelize.literal(...)]` — verified pattern in Context7. No conflict.
 
-2. **BIGINT ID string vs number in cursor**
-   - What we know: Postgres/Sequelize returns BIGINT as string (confirmed STATE.md Plan 03-04). The `CampaignAttributes.id` TypeScript type is `number` but runtime value is string.
-   - What's unclear: Whether `String(campaign.id)` always produces a stable string or if Sequelize coerces it.
-   - Recommendation: Always use `String(id)` in `encodeCursor` and `Number(cId)` in the replacement (Postgres accepts numeric strings in `WHERE id = :cId`). Store `cId` as string in cursor to avoid float precision issues.
+2. **BIGINT ID string vs number in cursor** *(RESOLVED — cursor applies to recipients only)*
+   - Resolution: `GET /campaigns` uses offset pagination (no cursor). For `GET /recipients` cursor: use `String(id)` in `encodeCursor`, `Number(cId)` as replacement (Postgres accepts numeric strings). `cId` stored as string in payload to avoid float precision loss. Applies to recipientService only.
 
 ---
 

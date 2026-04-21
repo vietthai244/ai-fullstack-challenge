@@ -49,9 +49,9 @@ created: 2026-04-21
 
 ---
 
-## Wave 0 Requirements
+## Plan 04-04 Deliverables
 
-- [ ] `backend/test/smoke/camp-01-list.sh` — covers CAMP-01 cursor pagination (no dupes/skips across 50+ rows)
+- [ ] `backend/test/smoke/camp-01-list.sh` — covers CAMP-01 offset pagination (page=1..N, totalPages correct, limit enforced)
 - [ ] `backend/test/smoke/camp-02-create.sh` — covers CAMP-02 draft create + recipient upsert
 - [ ] `backend/test/smoke/camp-03-detail.sh` — covers CAMP-03 eager-load recipients + inline stats
 - [ ] `backend/test/smoke/camp-04-patch.sh` — covers CAMP-04 409 on non-draft PATCH
@@ -69,7 +69,7 @@ created: 2026-04-21
 
 | Behavior | Requirement | Why Manual | Test Instructions |
 |----------|-------------|------------|-------------------|
-| Cursor no-dupe at `created_at` collision boundary | CAMP-01 | Requires seeding 50+ rows with identical `created_at` values to expose the id tiebreaker gap | `yarn seed 50-same-ts && bash backend/test/smoke/camp-01-list.sh --pages all` |
+| Cursor no-dupe at `created_at` collision boundary | RECIP-02 | Requires seeding 50+ rows with identical `created_at` values to expose the id tiebreaker gap (applies to recipients cursor, not campaigns offset) | `yarn seed 50-same-ts && bash backend/test/smoke/recip-02-list.sh --pages all` |
 | PATCH full recipient replace (tx atomicity) | CAMP-04 | Requires kill-connection test during tx | Manual kill during PATCH; verify campaign+recipients consistent |
 | AUTH-07 cross-user 404 on GET /campaigns/:id | CAMP-03 | Requires two user accounts; see Phase 7 TEST-04 | Create user A + user B; user A tries GET /campaigns/:id of user B → 404 |
 
@@ -77,9 +77,9 @@ created: 2026-04-21
 
 ## Validation Sign-Off
 
-- [ ] All tasks have typecheck automated verify or Wave 0 smoke dependencies
+- [ ] All tasks have typecheck automated verify or Plan 04-04 smoke dependencies
 - [ ] Sampling continuity: no 3 consecutive tasks without automated verify
-- [ ] Wave 0 covers all MISSING smoke scripts
+- [ ] Plan 04-04 covers all MISSING smoke scripts
 - [ ] No watch-mode flags
 - [ ] Feedback latency < 60s (docker compose running)
 - [ ] `nyquist_compliant: true` set in frontmatter
