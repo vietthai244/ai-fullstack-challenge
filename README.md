@@ -170,7 +170,6 @@ Throughout the build, the interaction was not "describe the app, get the code." 
 
 **Scope discussions (before planning):**
 - Phase 2: "Use `00000000000000-` prefix for the pgcrypto migration so it always sorts first — don't use a timestamp." Claude had defaulted to a timestamp; the user locked the requirement before the plan was written.
-- Phase 3: "The refresh cookie Path must be `/auth` not `/auth/refresh` — logout needs to read and clear it to denylist the jti in Redis." Claude's research defaulted to `/auth/refresh`. User corrected before planning; Claude updated DECISIONS.md.
 - Phase 4: "Campaign list uses offset pagination with page numbers, not cursor. I know CLAUDE.md says cursor — this is an explicit override for the UI." Claude accepted the override and documented it in DECISIONS.md.
 
 **Approach confirmations (during planning):**
@@ -185,7 +184,6 @@ Throughout the build, the interaction was not "describe the app, get the code." 
 **Corrections applied mid-execution:**
 1. **Corepack shim** (Plan 01-02): Claude's initial scripts used bare `yarn`, which would invoke Homebrew classic Yarn 1.x. Corrected to `/usr/local/bin/yarn` (corepack shim) and added `corepack enable` to setup docs.
 2. **pgcrypto prefix** (Plan 02-03): Timestamp prefix → `00000000000000-` numeric prefix for lexical ordering safety.
-3. **Cookie Path** (Plan 03-03): `/auth/refresh` → `/auth` so `/auth/logout` can receive and clear the cookie.
 
 ### What was delegated vs. what was not
 

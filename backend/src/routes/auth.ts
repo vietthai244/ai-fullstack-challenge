@@ -17,10 +17,7 @@
 //      for the tail errorHandler (Plan 01) to shape as `{ error: { code, message } }`.
 //   3. Single module-scope COOKIE_OPTS — every res.cookie / res.clearCookie
 //      spreads from it so Path/HttpOnly/SameSite match on both ends.
-//   4. Path='/auth' (NOT '/auth/refresh'). Deliberate deviation from
-//      ARCHITECTURE.md §8 — the cookie MUST reach /auth/logout so the server
-//      can denylist its jti. Documented as A1 in 03-RESEARCH.md Assumptions
-//      Log; Plan 04 drafts the DECISIONS.md note.
+//   4. Path='/auth/refresh' — cookie is scoped to the refresh endpoint only.
 
 import { Router, type Request, type Response, type NextFunction } from 'express';
 import { RegisterSchema, LoginSchema } from '@campaign/shared';
@@ -46,12 +43,7 @@ const COOKIE_OPTS = {
   httpOnly: true,
   secure: config.NODE_ENV === 'production',
   sameSite: 'strict' as const,
-  // Path='/auth' not '/auth/refresh': cookie must reach BOTH /auth/refresh
-  // (rotation) and /auth/logout (denylist). No common prefix shorter than
-  // '/auth' covers both endpoints. Trade-off: cookie is also sent to
-  // /auth/register and /auth/login, which ignore req.cookies.rt entirely.
-  // Documented in DECISIONS.md §A1 (Phase 4 deliverable). (WR-02)
-  path: '/auth',
+  path: '/auth/refresh',
   maxAge: 7 * 24 * 60 * 60 * 1000,       // 7 days in ms
 };
 
@@ -179,8 +171,8 @@ authRouter.post(
 
 // ---------------------------------------------------------------------------
 // AUTH-04 · POST /auth/logout
-// Denylists current jti (via jwt.decode — accepts expired/tampered tokens);
-// clears cookie with matching Path=/auth.
+// Clears the refresh cookie. Denylist attempted if cookie is present on request
+// (cookie path is /auth/refresh so browser only sends it when calling that endpoint).
 // ---------------------------------------------------------------------------
 authRouter.post(
   '/logout',
