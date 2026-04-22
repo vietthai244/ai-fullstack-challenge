@@ -164,33 +164,55 @@ Each of the 10 phases followed this pipeline:
 - Plan 10-04 (README) was marked `autonomous: false` with a `checkpoint:human-verify` gate — executor wrote the README draft then **stopped and presented the "How I Used Claude Code" section for user review before committing**
 - Developer reviewed the draft, provided corrections, executor committed the approved version
 
-### Developer–AI interaction
+### 1. What tasks were delegated
 
-Throughout the build, the interaction was not "describe the app, get the code." It was iterative and scope-explicit at every phase gate:
+All code implementation was delegated: database migrations, Sequelize models, Express route handlers, BullMQ queue and worker wiring, JWT middleware, Dockerfiles, nginx config, React pages, Redux slices, React Query hooks, Zod schemas, and test files. The GSD workflow also handled research (pitfall catalogues, architecture patterns), plan generation, and automated verification.
 
-**Scope discussions (before planning):**
-- Phase 2: "Use `00000000000000-` prefix for the pgcrypto migration so it always sorts first — don't use a timestamp." Claude had defaulted to a timestamp; the user locked the requirement before the plan was written.
-- Phase 4: "Campaign list uses offset pagination with page numbers, not cursor. I know CLAUDE.md says cursor — this is an explicit override for the UI." Claude accepted the override and documented it in DECISIONS.md.
+### 2. Real prompts used
 
-**Approach confirmations (during planning):**
-- Phase 3: Developer confirmed `buildApp()` factory split (in Phase 3, not Phase 7) so Supertest could import the app without binding a port — a structural investment Claude proposed, user approved.
-- Phase 7: "The concurrent-send test must actually hit a real Postgres and fire two `Promise.all` requests — no mocks. I want proof the atomic guard works." Claude confirmed real-DB test with `singleFork: true`.
-- Phase 9: Developer confirmed infinite scroll on recipients (React Query `useInfiniteQuery`) while explicitly blocking cursor pagination on the campaign list.
+> *"The concurrent-send test must actually hit a real Postgres and fire two `Promise.all` requests — no mocks. I want proof the atomic guard works under real database concurrency."*
 
-**Approvals (during execution):**
-- All code review fixes (REVIEW.md items) were applied only after the executor presented the diff and the user let the checkpoint pass.
-- README's "How I Used Claude Code" section (this section) was held behind a human-verify checkpoint — not committed until the user reviewed and approved the content.
+This constrained how Phase 7 tests were written. Claude had proposed a simulated race with a setTimeout mock; the developer rejected it and required a real-DB test with `singleFork: true`.
 
-**Corrections applied mid-execution:**
-1. **Corepack shim** (Plan 01-02): Claude's initial scripts used bare `yarn`, which would invoke Homebrew classic Yarn 1.x. Corrected to `/usr/local/bin/yarn` (corepack shim) and added `corepack enable` to setup docs.
-2. **pgcrypto prefix** (Plan 02-03): Timestamp prefix → `00000000000000-` numeric prefix for lexical ordering safety.
+> *"Campaign list uses offset pagination with page numbers, not cursor. I know CLAUDE.md says cursor — this is an explicit override for the UI. Document it in DECISIONS.md."*
 
-### What was delegated vs. what was not
+CLAUDE.md §5 mandated cursor pagination. The developer overrode it for the campaign list because page-number UI is incompatible with cursor semantics. Claude accepted the override and documented the trade-offs.
 
-**Fully delegated:** All code implementation — migrations, services, middleware, BullMQ wiring, Dockerfiles, nginx config, React pages, Redux slices, React Query hooks, test files.
+> *"Use `00000000000000-` prefix for the pgcrypto migration so it always sorts first — don't use a timestamp."*
 
-**Not delegated:**
-- **`.docs/requirements.md`** — the reviewer's original spec. Claude was instructed to read it, never write it.
-- **Locked architectural decisions** — Redux+React Query (not Zustand/SWR), BullMQ (not pg-boss), split-token JWT, cursor pagination on recipients, flat monorepo. Once decided, Claude could not re-open these even when research suggested alternatives.
-- **v2 features** — the deferred list in REQUIREMENTS.md (real SMTP, rich-text editor, unsubscribe). Claude was blocked from pulling from it.
-- **This section** — drafted from live STATE.md logs and git history captured during the build, not reconstructed after the fact. Committed only after user review.
+Claude had defaulted to a timestamp prefix. The developer locked the requirement before the plan was written to guarantee lexical ordering safety across environments.
+
+### 3. Where Claude Code was wrong or needed correction
+
+**Planning-stage corrections:**
+
+- **pgcrypto prefix** (Phase 2): Claude defaulted to timestamp-prefixed migration filenames. Changed to `00000000000000-` numeric prefix before any code was written.
+- **Corepack shim** (Phase 1): Claude's initial scripts used bare `yarn`, which invokes Homebrew classic Yarn 1.x on macOS. Corrected to use the corepack shim with `corepack enable`.
+
+**Bugs found through manual smoke testing:**
+
+After Phase 10 (full Docker stack), the developer ran the app end-to-end in a real browser and caught a class of issues that automated tests and AI verifiers both missed — because they exercised the stack through curl and Supertest, not through an actual browser session. Several phases also included formal `HUMAN-UAT.md` checkpoints where specific flows were exercised before marking the phase complete.
+
+This produced two additional fix phases:
+
+**Phase 10.1 — Auth & navigation bugs:**
+- Login button stayed stuck in "Logging in..." after a successful login — Redux dispatch was resolving before navigation
+- Page refresh lost auth state — bootstrap was calling `/auth/me` before `/auth/refresh`, so the access token was never rehydrated
+- ProtectedRoute wasn't preserving the originally requested URL for post-login redirect
+- NavBar component and `/register` route were missing entirely from the routing tree
+
+**Phase 10.2 — Send/delete bugs and UX gaps:**
+- Campaigns in `sending` state polled indefinitely — the BullMQ worker used `updatedAt` as a stale-job guard, but Sequelize wasn't touching that field during status transitions; fixed with a dedicated `started_at` column
+- Deleting a draft campaign with recipients attached returned 409 — the delete handler needed to destroy junction rows before the campaign row
+- Email input didn't tokenize on spacebar — only comma and Enter were handled
+- No user feedback on send/schedule/delete actions — toasts were missing throughout
+- Recipients were not editable on draft campaigns even though the status allowed it
+
+Each bug was described by the developer, planned and fixed by Claude via the GSD workflow, and verified manually before the phase was marked complete.
+
+### 4. What Claude Code was NOT allowed to do — and why
+
+- **`.docs/requirements.md`** — Claude was instructed to read it, never write it. It is the reviewer's original spec and must remain verbatim as the unmodified source of truth. Any AI rewrite would blur the line between what was asked and what was built.
+- **Locked architectural decisions** — Redux+React Query, BullMQ, split-token JWT, cursor pagination on recipients, flat monorepo. Once decided, Claude could not re-open these even when research suggested alternatives. Re-litigating locked decisions mid-build wastes time and introduces churn; the value of a decision is partly that it stays decided.
+- **v2 features** — the deferred list in REQUIREMENTS.md (real SMTP, rich-text editor, unsubscribe). Claude was blocked from pulling from it because scope creep is a real risk when an AI agent is capable of implementing features that were never requested.
+- **This section** — drafted collaboratively from live STATE.md logs and git history captured during the build, not reconstructed after the fact. Committed only after developer review. Letting Claude write its own performance review without oversight would undermine the transparency this section is meant to provide.
